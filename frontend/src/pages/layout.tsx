@@ -1,12 +1,7 @@
-import {
-  ArrowRightEndOnRectangleIcon,
-  ArrowRightStartOnRectangleIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/20/solid";
+import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import {
   BellIcon,
   BookmarkIcon,
-  Cog6ToothIcon,
   HomeIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
