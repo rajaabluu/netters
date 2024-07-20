@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 5000;
 const authRoute = require("./src/routes/auth_route");
 const { default: mongoose } = require("mongoose");
 
-// dotenv.config();
+dotenv.config();
 
 app.use(
   cors({
