@@ -5,6 +5,7 @@ const dotenv = require("dotenv");
 const PORT = process.env.PORT || 5000;
 const authRoute = require("./src/routes/auth_route");
 const { default: mongoose } = require("mongoose");
+const cookieParser = require("cookie-parser");
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", (req, res) => res.send("Hello World!"));
 

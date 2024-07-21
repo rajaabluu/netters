@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const route = require("express").Router();
 const bcrypt = require("bcrypt");
 const { generateTokenAndSetCookie } = require("../utils/token");
+const { checkAuth } = require("../middleware/protected_route");
 
 route.post("/signup", async (req, res) => {
   const { username, email, fullName, password } = req.body;
@@ -81,9 +82,10 @@ route.post("/logout", async (req, res) => {
   }
 });
 
-route.get("/me", async (req, res) => {
+route.get("/me", checkAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select("-password").lean();
+    return res.status(200).json(user);
   } catch (err) {
     console.log(err);
     if (err instanceof MongooseError) {
