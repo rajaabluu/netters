@@ -46,12 +46,18 @@ route.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username });
-    const passwordMatch = await bcrypt.compare(password, user?.password || "");
-    if (!user || !passwordMatch) {
+    if (!user) {
       return res
         .status(401)
         .json({ message: "Incorrect Username or Password" });
     }
+    const passwordMatch = await bcrypt.compare(password, user?.password || "");
+    if (!passwordMatch) {
+      return res
+        .status(401)
+        .json({ message: "Incorrect Username or Password" });
+    }
+
     generateTokenAndSetCookie({ userId: user._id, res: res });
     return res.status(200).json({
       _id: user._id,
