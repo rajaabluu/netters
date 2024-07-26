@@ -4,6 +4,8 @@ import Layout from "./pages/layout";
 import HomePage from "./pages";
 import LoginPage from "./pages/auth/login";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { Toaster } from "sonner";
+import SignUpPage from "./pages/auth/sign-up";
 
 function App() {
   const queryClient = new QueryClient();
@@ -12,10 +14,12 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/auth/sign-up" element={<SignUpPage />} />
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
           </Route>
         </Routes>
+        <Toaster richColors />
       </BrowserRouter>
     </QueryClientProvider>
   );

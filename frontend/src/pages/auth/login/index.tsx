@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Input from "../../../components/forms/input";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/20/solid";
 import { useMutation } from "react-query";
 import api from "../../../api/config";
+import Loader from "../../../components/loader/loader";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const forms = [
@@ -21,13 +23,19 @@ export default function LoginPage() {
   const handleChange = (e: any) =>
     setCredentials((data) => ({ ...data, [e.target.id]: e.target.value }));
 
-  const { mutate: loginHandler } = useMutation({
-    mutationFn: async (e: any) => {
-      e.preventDefault();
-      const res = await api.post("/auth/login");
-      if (res.status == 200) {
-        console.log(res.data);
+  const { mutate: loginHandler, isLoading } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await api.post("/auth/login", credentials);
+        if (res.status == 200) {
+          console.log(res.data);
+        }
+      } catch (err: any) {
+        err.response.status == 401 && toast.error(err.response.data.message);
       }
+    },
+    onError: (message: string) => {
+      toast.error(message);
     },
   });
 
@@ -39,13 +47,16 @@ export default function LoginPage() {
         </h1>
         <p className="text-slate-500 mt-2">Sign In With Your Credentials</p>
         <form
-          onSubmit={loginHandler}
+          onSubmit={(e) => {
+            e.preventDefault();
+            loginHandler();
+          }}
           className="flex flex-col flex-grow pt-16 gap-3 w-full sm:px-12 md:px-0 lg:px-4 xl:px-12"
         >
           {forms.map((form, i) => (
             <Input
               name={form.name}
-              value={credentials.name}
+              value={credentials[form.name]}
               type={
                 form.name == "password"
                   ? hidePassword
@@ -75,9 +86,9 @@ export default function LoginPage() {
           ))}
           <button
             type="submit"
-            className="px-4 py-2 bg-[#18181B] text-white rounded-lg mt-16 "
+            className="px-4 py-2 bg-[#18181B] text-white flex justify-center text-center rounded-lg mt-16 "
           >
-            Submit
+            {isLoading ? <Loader className="size-6" /> : "Submit"}
           </button>
           <p className="text-slate-600">
             Don't have a account?{" "}
