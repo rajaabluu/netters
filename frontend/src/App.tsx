@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Layout from "./pages/layout";
 import HomePage from "./pages";
 import LoginPage from "./pages/auth/login";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import SignUpPage from "./pages/auth/sign-up";
 

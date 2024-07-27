@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import Input from "../../../components/forms/input";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/20/solid";
-import { useMutation } from "react-query";
+import { useMutation } from "@tanstack/react-query";
 import api from "../../../api/config";
 import Loader from "../../../components/loader/loader";
 import { toast } from "sonner";
@@ -23,7 +23,7 @@ export default function LoginPage() {
   const handleChange = (e: any) =>
     setCredentials((data) => ({ ...data, [e.target.id]: e.target.value }));
 
-  const { mutate: loginHandler, isLoading } = useMutation({
+  const { mutate: loginHandler, isPending } = useMutation({
     mutationFn: async () => {
       try {
         const res = await api.post("/auth/login", credentials);
@@ -88,7 +88,7 @@ export default function LoginPage() {
             type="submit"
             className="px-4 py-2 bg-[#18181B] text-white flex justify-center text-center rounded-lg mt-16 "
           >
-            {isLoading ? <Loader className="size-6" /> : "Submit"}
+            {isPending ? <Loader className="size-6" /> : "Submit"}
           </button>
           <p className="text-slate-600">
             Don't have a account?{" "}
