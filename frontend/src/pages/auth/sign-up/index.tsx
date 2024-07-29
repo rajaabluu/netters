@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Input from "../../../components/forms/input";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/20/solid";
+import { useMutation } from "@tanstack/react-query";
+import api from "../../../api/config";
+import Loader from "../../../components/loader/loader";
 
 export default function SignUpPage() {
   const forms = [
@@ -15,6 +18,8 @@ export default function SignUpPage() {
     password: "",
   });
 
+  const [validationError, setValidationError] = useState({});
+
   const [hidePassword, setHidePassword] = useState(true);
 
   const handleChange = (e: any) => {
@@ -22,16 +27,37 @@ export default function SignUpPage() {
     setCredentials((c) => ({ ...c, [id]: value }));
   };
 
+  const handleSignUp = async () => {
+    try {
+      const res = await api.get("/auth/sign-up");
+      if (res.status == 200) return res.data;
+    } catch (err) {}
+  };
+
+  const { mutate: signUp, isPending } = useMutation({
+    mutationFn: handleSignUp,
+    onSuccess: () => {},
+  });
+
+  useEffect(() => {
+    console.log(credentials);
+  }, [credentials]);
+
   return (
-    <div className="flex">
-      <div className="flex flex-col flex-grow">
-        <div className="px-6 mt-28">
+    <div className="flex h-screen">
+      <div className="flex max-md:hidden md:flex-grow bg-[#18181B]"></div>
+      <div className="flex flex-col max-md:flex-grow md:w-2/3 px-[8%] sm:text-center sm:px-28 md:px-16 lg:px-12 xl:px-20 2xl:px-28 lg:w-1/2">
+        <div className="mt-44">
           <h1 className="font-semibold text-3xl text-slate-700">Sign Up</h1>
           <p className="text-slate-500">Create your account below.</p>
         </div>
         <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            signUp();
+          }}
           method="POST"
-          className="flex flex-grow flex-col px-6  pt-16 gap-3 w-full sm:px-12 md:px-0 lg:px-4 xl:px-12"
+          className="flex flex-grow flex-col  pt-16 gap-3 w-full lg:px-4 xl:px-12"
         >
           {forms.map((form, i) => (
             <Input
@@ -64,6 +90,9 @@ export default function SignUpPage() {
               )}
             </Input>
           ))}
+          <button className="py-2.5 px-5 bg-[#18181B] rounded-md text-white mt-8 flex justify-center">
+            {isPending ? <Loader className="size-6" /> : "Sign Up"}
+          </button>
         </form>
       </div>
     </div>
