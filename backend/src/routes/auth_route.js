@@ -57,7 +57,6 @@ route.post("/login", async (req, res) => {
         .status(401)
         .json({ message: "Incorrect Username or Password" });
     }
-
     generateTokenAndSetCookie({ userId: user._id, res: res });
     return res.status(200).json({
       _id: user._id,
