@@ -5,7 +5,7 @@ const schema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "fullname field is required"],
+      required: [true, "name field is required"],
     },
     username: {
       type: String,

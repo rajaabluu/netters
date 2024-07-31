@@ -22,7 +22,7 @@ const schema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true, strict: false }
 );
 
 const Notification =

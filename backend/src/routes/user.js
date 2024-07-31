@@ -36,6 +36,7 @@ route.post("/follow/:id", checkAuth, async (req, res) => {
     if (isFollowed) {
       await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } });
       await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } });
+      await Notification.findOneAndDelete({ from: req.user._id, to: id });
       return res.status(200).json({ message: "User unfollowed" });
     } else {
       await User.findByIdAndUpdate(req.user._id, { $push: { following: id } });

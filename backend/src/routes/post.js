@@ -2,7 +2,81 @@ const Post = require("../models/post");
 const route = require("express").Router();
 const upload = require("../middleware/multer");
 const { checkAuth } = require("../middleware/protected_route");
-const cloudinary = require("cloudinary").v2;
+const Notification = require("../models/notification");
+
+route.get("/", checkAuth, async (req, res) => {
+  const itemsPerPage = 10;
+  const page = Math.max(0, req.query.page || 1);
+  try {
+    const posts = await Post.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $addFields: {
+          likesCount: { $size: "$likes" },
+          commentsCount: { $size: "$comments" },
+        },
+      },
+      {
+        $skip: itemsPerPage * (page - 1),
+      },
+      { $limit: itemsPerPage },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "likes",
+          foreignField: "_id",
+          as: "likes",
+        },
+      },
+      {
+        $project: {
+          "user.name": 1,
+          "user.profileImage": 1,
+          "user.username": 1,
+          text: 1,
+          images: 1,
+          comments: 1,
+          "likes.name": 1,
+          "likes.username": 1,
+          "likes.profileImage": 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      data: posts,
+      pagination: {
+        next_page: page + 1,
+        prev_page: page > 1 ? page - 1 : null,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+route.get("/followed", checkAuth, async (req, res) => {
+  try {
+    const user = req.user;
+    const posts = await Post.find({ user: { $in: user.following } })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("user", "name username profileImage");
+    return res.status(200).json(posts);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
 
 route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
   const { text } = req.body;
@@ -29,8 +103,34 @@ route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
   }
 });
 
-route.post("/:id/comment", async (req, res) => {
+route.post("/comment/:id", async (req, res) => {
   throw new Error("NOT IMPLEMENTED");
+});
+
+route.post("/like/:id", checkAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: "Post Not Found" });
+    const hasLiked = post.likes.includes(req.user._id);
+    if (hasLiked) {
+      await Post.findByIdAndUpdate(id, { $pull: { likes: req.user._id } });
+      await Notification.findOneAndDelete({ postId: post._id });
+      return res.status(200).json({ message: "Post Unliked" });
+    }
+    await Post.findByIdAndUpdate(id, { $push: { likes: req.user._id } });
+    if (post.user.toString() !== req.user._id.toString()) {
+      await new Notification({
+        type: "LIKE",
+        from: req.user._id,
+        to: post.user,
+        postId: post._id,
+      }).save();
+    }
+    return res.status(200).json({ message: "Post Liked" });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 });
 
 route.delete("/:id", checkAuth, async (req, res) => {
