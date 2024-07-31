@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 
 const schema = new mongoose.Schema(
   {
-    fullName: {
+    name: {
       type: String,
       required: [true, "fullname field is required"],
     },
@@ -27,12 +27,18 @@ const schema = new mongoose.Schema(
     following: [
       { type: mongoose.Schema.Types.ObjectId, ref: "user", default: [] },
     ],
-    avatar: {
-      type: String,
+    profileImage: {
+      type: {
+        url: String,
+        publicId: String,
+      },
       default: null,
     },
-    cover: {
-      type: String,
+    coverImage: {
+      type: {
+        url: String,
+        publicId: String,
+      },
       default: null,
     },
     bio: {

@@ -2,6 +2,8 @@ const { checkAuth } = require("../middleware/protected_route");
 const Notification = require("../models/notification");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const cloudinary = require("cloudinary").v2;
+const upload = require("../middleware/multer");
 
 const route = require("express").Router();
 
@@ -74,30 +76,86 @@ route.get("/suggested", async (req, res) => {
   } catch (error) {}
 });
 
-route.put("/", checkAuth, async (req, res) => {
-  const { fullName, email, username, currentPassword, newPassword, bio, link } =
-    req.body;
-  let { profileImage, coverimage } = req.body;
-  try {
-    const user = await User.findById(req.user._id);
-    if (!user) return res.status(404).json({ message: "User Not Found" });
-    if (
-      (!newPassword && currentPassword) ||
-      (!currentPassword && newPassword)
-    ) {
-      return res.status(400).json({
-        message: "Please provide both current password and new password",
+route.put(
+  "/",
+  checkAuth,
+  upload.fields([
+    { name: "profileImage", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const { name, email, username, currentPassword, newPassword, bio, link } =
+      req.body;
+    let { profileImage, coverImage } = req.files;
+
+    try {
+      let user = await User.findById(req.user._id);
+      if (!user) return res.status(404).json({ message: "User Not Found" });
+      if (
+        (!newPassword && currentPassword) ||
+        (!currentPassword && newPassword)
+      ) {
+        return res.status(400).json({
+          message: "Please provide both current password and new password",
+        });
+      }
+      if (currentPassword && newPassword) {
+        const passwordMatch = await bcrypt.compare(
+          currentPassword,
+          user.password
+        );
+        if (!passwordMatch)
+          return res
+            .status(400)
+            .json({ error: "Current Password is incorrect" });
+      }
+
+      if (profileImage) {
+        // if (user.profileImage) {
+        //   await cloudinary.uploader.destroy(user.profileImage.publicId);
+        // }
+        const result = await cloudinary.uploader.upload(profileImage[0].path, {
+          folder: "profile",
+        });
+        profileImage = {
+          url: result.secure_url,
+          publicId: result.public_id,
+        };
+      }
+      if (coverImage) {
+        if (user.coverImage) {
+          await cloudinary.uploader.destroy(user.coverImage.publicId);
+        }
+        const result = await cloudinary.uploader.upload(coverImage[0].path, {
+          folder: "cover",
+        });
+        coverImage = {
+          url: result.secure_url,
+          publicId: result.public_id,
+        };
+      }
+
+      user.name = name || user.name;
+      user.email = email || user.email;
+      user.username = username || user.username;
+      user.password = newPassword || user.password;
+      user.bio = bio || user.bio;
+      user.link = link || user.link;
+      user.profileImage = profileImage || user.profileImage;
+      user.coverImage = coverImage || user.coverImage;
+
+      user = await user.save();
+
+      user.password = null;
+
+      return res.status(200).json(user);
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({
+        message: err.message,
       });
     }
-    if (currentPassword && newPassword) {
-      const passwordMatch = await bcrypt.compare(
-        currentPassword,
-        user.password
-      );
-      if (!passwordMatch)
-        return res.status(400).json({ error: "Current Password is incorrect" });
-    }
-  } catch (error) {}
-});
+  }
+);
 
 module.exports = route;

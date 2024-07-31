@@ -7,7 +7,7 @@ const { generateTokenAndSetCookie } = require("../utils/token");
 const { checkAuth } = require("../middleware/protected_route");
 
 route.post("/signup", async (req, res) => {
-  const { username, email, fullName, password } = req.body;
+  const { username, email, name, password } = req.body;
   try {
     const usernameTaken = await User.findOne({ username });
     const emailTaken = await User.findOne({ email });
@@ -18,19 +18,19 @@ route.post("/signup", async (req, res) => {
     if (usernameTaken || emailTaken) {
       return res.status(422).json({ errors });
     }
-    const user = new User({ username, email, fullName, password });
+    const user = new User({ username, email, name, password });
     if (user) {
       generateTokenAndSetCookie({ userId: user._id, res: res });
       await user.save();
       return res.status(201).json({
         _id: user._id,
         username: user.username,
-        fullName: user.fullName,
+        name: user.name,
         email: user.email,
         followers: user.followers,
         following: user.following,
-        avatar: user.avatar,
-        cover: user.cover,
+        profileImage: user.profileImage,
+        coverImage: user.profileImage,
       });
     }
   } catch (err) {
@@ -61,12 +61,12 @@ route.post("/login", async (req, res) => {
     return res.status(200).json({
       _id: user._id,
       username: user.username,
-      fullName: user.fullName,
+      name: user.name,
       email: user.email,
       followers: user.followers,
       following: user.following,
-      avatar: user.avatar,
-      cover: user.cover,
+      profileImage: user.profileImage,
+      coverImage: user.coverImage,
     });
   } catch (err) {
     console.log(err);
