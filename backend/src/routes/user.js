@@ -19,15 +19,15 @@ route.get("/profile/:username", checkAuth, async (req, res) => {
   }
 });
 
-route.post("/:id", checkAuth, async (req, res) => {
+route.post("/follow/:id", checkAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const modifiedUser = await User.findById(id);
     const currentUser = await User.findById(req.user._id);
-    if (id === req.user._id) {
+    if (id === req.user._id.toString()) {
       return res
         .status(400)
-        .json({ message: "You can't follow/unfollow yourself" });
+        .json({ message: "You can't follow / unfollow yourself" });
     }
     if (!currentUser || !modifiedUser) {
       return res.status(404).json({ message: "User Not Found" });
@@ -54,7 +54,7 @@ route.post("/:id", checkAuth, async (req, res) => {
   }
 });
 
-route.get("/suggested", async (req, res) => {
+route.get("/suggested", checkAuth, async (req, res) => {
   try {
     const followedByMe = await User.findById(req.user._id).select("following");
     const users = await User.aggregate([
@@ -73,7 +73,10 @@ route.get("/suggested", async (req, res) => {
     suggestedUser.forEach((user) => (user.password = null));
 
     return res.status(200).json(suggestedUser);
-  } catch (error) {}
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: err.message });
+  }
 });
 
 route.put(

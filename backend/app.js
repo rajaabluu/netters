@@ -3,8 +3,9 @@ const app = express();
 const cors = require("cors");
 const dotenv = require("dotenv");
 const PORT = process.env.PORT || 5000;
-const authRoute = require("./src/routes/auth_route");
-const userRoute = require("./src/routes/user_route");
+const authRoute = require("./src/routes/auth");
+const userRoute = require("./src/routes/user");
+const postRoute = require("./src/routes/post");
 const { default: mongoose } = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
@@ -24,12 +25,14 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.get("/", (req, res) => res.send("Hello World!"));
 
 app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
+app.use("/api/post", postRoute);
 
 app.use((req, res, next) => {
   const error = new Error(req.url + " Is Not Found");
