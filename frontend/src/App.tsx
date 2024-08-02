@@ -5,7 +5,7 @@ import HomePage from "./pages";
 import LoginPage from "./pages/auth/login";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import SignUpPage from "./pages/auth/sign-up";
+import SignUpPage from "./pages/auth/signup";
 
 function App() {
   const queryClient = new QueryClient();

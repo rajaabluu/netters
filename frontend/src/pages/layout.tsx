@@ -70,7 +70,7 @@ export default function Layout() {
         <h1 className="max-xl:hidden text-2xl font-semibold text-neutral-700">
           netters.
         </h1>
-        <div className="flex sm:flex-col max-xl:items-center max-sm:justify-evenly w-full sm:gap-10 sm:mt-28">
+        <div className="flex sm:flex-col max-xl:items-center max-sm:justify-evenly w-full sm:gap-10 sm:mt-20 lg:mt-28">
           {menu.map((m, i) => {
             return (
               <Link

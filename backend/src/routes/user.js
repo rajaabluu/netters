@@ -19,7 +19,7 @@ route.get("/profile/:username", checkAuth, async (req, res) => {
   }
 });
 
-route.post("/follow/:id", checkAuth, async (req, res) => {
+route.post("/:id/follow", checkAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const modifiedUser = await User.findById(id);

@@ -7,12 +7,14 @@ import Loader from "../../../components/loader/loader";
 
 export default function SignUpPage() {
   const forms = [
+    { label: "Name", name: "fullName", type: "text" },
     { label: "Username", name: "username", type: "text" },
     { label: "Email", name: "email", type: "email" },
     { label: "Password", name: "password", type: "password" },
   ];
 
   const [credentials, setCredentials] = useState<Record<string, any>>({
+    fullName: "",
     username: "",
     email: "",
     password: "",
@@ -29,8 +31,8 @@ export default function SignUpPage() {
 
   const handleSignUp = async () => {
     try {
-      const res = await api.get("/auth/sign-up");
-      if (res.status == 200) return res.data;
+      const res = await api.post("/auth/signup", credentials);
+      if (res.status == 201) return res.data;
     } catch (err) {}
   };
 

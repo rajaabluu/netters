@@ -3,12 +3,84 @@ const route = require("express").Router();
 const upload = require("../middleware/multer");
 const { checkAuth } = require("../middleware/protected_route");
 const Notification = require("../models/notification");
+const { default: mongoose } = require("mongoose");
 
 route.get("/", checkAuth, async (req, res) => {
   const itemsPerPage = 10;
   const page = Math.max(0, req.query.page || 1);
+  const totalPosts = await Post.countDocuments({});
   try {
     const posts = await Post.aggregate([
+      {
+        $match:
+          req.query.type == "followed"
+            ? { user: { $in: req.user.following } }
+            : {},
+      },
+      { $sort: { createdAt: -1 } },
+      {
+        $addFields: {
+          likesCount: { $size: "$likes" },
+          commentsCount: { $size: "$comments" },
+        },
+      },
+      {
+        $skip: itemsPerPage * (page - 1),
+      },
+      { $limit: itemsPerPage },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "likes",
+          foreignField: "_id",
+          as: "likes",
+        },
+      },
+      {
+        $project: {
+          "user._id": 1,
+          "user.name": 1,
+          "user.profileImage": 1,
+          "user.username": 1,
+          text: 1,
+          images: 1,
+          comments: 1,
+          "likes._id": 1,
+          "likes.name": 1,
+          "likes.username": 1,
+          "likes.profileImage": 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      data: posts,
+      pagination: {
+        itemsPerPage,
+        nextPage: totalPosts <= itemsPerPage * page ? null : page + 1,
+        prevPage: page > 1 ? page - 1 : null,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+route.get("/:id/user", checkAuth, async (req, res) => {
+  const itemsPerPage = 10;
+  const page = Math.max(0, req.query.page || 1);
+  try {
+    const posts = await Post.aggregate([
+      { $match: { user: new mongoose.Types.ObjectId(req.params.id) } },
       { $sort: { createdAt: -1 } },
       {
         $addFields: {
@@ -51,28 +123,14 @@ route.get("/", checkAuth, async (req, res) => {
         },
       },
     ]);
-
     return res.status(200).json({
       data: posts,
       pagination: {
-        next_page: page + 1,
-        prev_page: page > 1 ? page - 1 : null,
+        itemsPerPage,
+        nextPage: page + 1,
+        prevPage: page > 1 ? page - 1 : null,
       },
     });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-});
-
-route.get("/followed", checkAuth, async (req, res) => {
-  try {
-    const user = req.user;
-    const posts = await Post.find({ user: { $in: user.following } })
-      .sort({
-        createdAt: -1,
-      })
-      .populate("user", "name username profileImage");
-    return res.status(200).json(posts);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -103,11 +161,11 @@ route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
   }
 });
 
-route.post("/comment/:id", async (req, res) => {
+route.post("/:id/comment", async (req, res) => {
   throw new Error("NOT IMPLEMENTED");
 });
 
-route.post("/like/:id", checkAuth, async (req, res) => {
+route.post("/:id/like", checkAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const post = await Post.findById(id);
