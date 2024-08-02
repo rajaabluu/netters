@@ -5,6 +5,7 @@ const { checkAuth } = require("../middleware/protected_route");
 const Notification = require("../models/notification");
 const { default: mongoose } = require("mongoose");
 
+// Get All / Followed Users Post
 route.get("/", checkAuth, async (req, res) => {
   const itemsPerPage = 10;
   const page = Math.max(0, req.query.page || 1);
@@ -13,7 +14,7 @@ route.get("/", checkAuth, async (req, res) => {
     const posts = await Post.aggregate([
       {
         $match:
-          req.query.type == "followed"
+          req.query.type == "following"
             ? { user: { $in: req.user.following } }
             : {},
       },
@@ -66,7 +67,7 @@ route.get("/", checkAuth, async (req, res) => {
       data: posts,
       pagination: {
         itemsPerPage,
-        nextPage: totalPosts <= itemsPerPage * page ? null : page + 1,
+        nextPage: itemsPerPage * page >= totalPosts ? page + 1 : null,
         prevPage: page > 1 ? page - 1 : null,
       },
     });
@@ -75,9 +76,13 @@ route.get("/", checkAuth, async (req, res) => {
   }
 });
 
+// Get User Post
 route.get("/:id/user", checkAuth, async (req, res) => {
   const itemsPerPage = 10;
   const page = Math.max(0, req.query.page || 1);
+  const totalPosts = await Post.find({ user: req.params.id }).countDocuments(
+    {}
+  );
   try {
     const posts = await Post.aggregate([
       { $match: { user: new mongoose.Types.ObjectId(req.params.id) } },
@@ -110,12 +115,14 @@ route.get("/:id/user", checkAuth, async (req, res) => {
       },
       {
         $project: {
+          "user._id": 1,
           "user.name": 1,
           "user.profileImage": 1,
           "user.username": 1,
           text: 1,
           images: 1,
-          comments: 1,
+          commentsCount: 1,
+          "likes._id": 1,
           "likes.name": 1,
           "likes.username": 1,
           "likes.profileImage": 1,
@@ -127,7 +134,7 @@ route.get("/:id/user", checkAuth, async (req, res) => {
       data: posts,
       pagination: {
         itemsPerPage,
-        nextPage: page + 1,
+        nextPage: itemsPerPage * page >= totalPosts ? page + 1 : null,
         prevPage: page > 1 ? page - 1 : null,
       },
     });
@@ -136,6 +143,92 @@ route.get("/:id/user", checkAuth, async (req, res) => {
   }
 });
 
+// Get User Liked Post
+
+route.get("/:id/user/likes", checkAuth, async (req, res) => {
+  const itemsPerPage = 10;
+  const page = Math.max(0, req.query.page || 1);
+  const totalPosts = await Post.find({
+    likes: { $in: [new mongoose.Types.ObjectId(req.params.id)] },
+  }).countDocuments({});
+  try {
+    const posts = await Post.aggregate([
+      {
+        $match: {
+          likes: { $in: [new mongoose.Types.ObjectId(req.params.id)] },
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      {
+        $addFields: {
+          likesCount: { $size: "$likes" },
+          commentsCount: { $size: "$comments" },
+        },
+      },
+      {
+        $skip: itemsPerPage * (page - 1),
+      },
+      { $limit: itemsPerPage },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "likes",
+          foreignField: "_id",
+          as: "likes",
+        },
+      },
+      {
+        $project: {
+          "user._id": 1,
+          "user.name": 1,
+          "user.profileImage": 1,
+          "user.username": 1,
+          text: 1,
+          images: 1,
+          commentsCount: 1,
+          "likes._id": 1,
+          "likes.name": 1,
+          "likes.username": 1,
+          "likes.profileImage": 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+    return res.status(200).json({
+      data: posts,
+      pagination: {
+        itemsPerPage,
+        nextPage: itemsPerPage * page >= totalPosts ? page + 1 : null,
+        prevPage: page > 1 ? page - 1 : null,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// Get Post Detail
+route.get("/:id", checkAuth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate("user", "name username profileImage")
+      .populate("likes", "name username profileImage")
+      .populate("comments.user", "name username profileImage");
+    return res.status(200).json(post);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// Create Post
 route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
   const { text } = req.body;
   let images = [];
@@ -161,10 +254,30 @@ route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
   }
 });
 
-route.post("/:id/comment", async (req, res) => {
-  throw new Error("NOT IMPLEMENTED");
+// Comment on post
+route.post("/:id/comment", checkAuth, async (req, res) => {
+  try {
+    if (!req.body.text) {
+      return res.status(422).json({ message: "Text Is Required" });
+    }
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post Not Found" });
+    post.comments.push({ user: req.user._id, text: req.body.text });
+    await post.save();
+    await new Notification({
+      type: "COMMENT",
+      postId: post._id,
+      from: req.user._id,
+      to: post.user,
+      text: req.body.text,
+    }).save();
+    return res.status(200).json({ message: "Success Comment on Post" });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 });
 
+// Like Post
 route.post("/:id/like", checkAuth, async (req, res) => {
   try {
     const { id } = req.params;
@@ -173,7 +286,12 @@ route.post("/:id/like", checkAuth, async (req, res) => {
     const hasLiked = post.likes.includes(req.user._id);
     if (hasLiked) {
       await Post.findByIdAndUpdate(id, { $pull: { likes: req.user._id } });
-      await Notification.findOneAndDelete({ postId: post._id });
+      await Notification.findOneAndDelete({
+        type: "LIKE",
+        from: req.user._id,
+        to: post.user,
+        postId: post._id,
+      });
       return res.status(200).json({ message: "Post Unliked" });
     }
     await Post.findByIdAndUpdate(id, { $push: { likes: req.user._id } });

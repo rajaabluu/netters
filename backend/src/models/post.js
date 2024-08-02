@@ -22,6 +22,10 @@ const schema = new mongoose.Schema(
           required: true,
           ref: "user",
         },
+        createdAt: {
+          type: mongoose.SchemaTypes.Date,
+          default: Date.now(),
+        },
       },
     ],
   },

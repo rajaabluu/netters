@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 5000;
 const authRoute = require("./src/routes/auth");
 const userRoute = require("./src/routes/user");
 const postRoute = require("./src/routes/post");
+const notificationRoute = require("./src/routes/notification");
 const { default: mongoose } = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cloudinary = require("cloudinary").v2;
@@ -33,6 +34,7 @@ app.get("/", (req, res) => res.send("Hello World!"));
 app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/post", postRoute);
+app.use("/api/notification", notificationRoute);
 
 app.use((req, res, next) => {
   const error = new Error(req.url + " Is Not Found");
