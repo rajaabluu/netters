@@ -23,7 +23,7 @@ export default function LoginPage() {
   const handleChange = (e: any) =>
     setCredentials((data) => ({ ...data, [e.target.id]: e.target.value }));
 
-  const { mutate: loginHandler, isPending } = useMutation({
+  const { mutate: login, isPending } = useMutation({
     mutationFn: async () => {
       try {
         const res = await api.post("/auth/login", credentials);
@@ -31,11 +31,14 @@ export default function LoginPage() {
           console.log(res.data);
         }
       } catch (err: any) {
-        err.response.status == 401 && toast.error(err.response.data.message);
+        throw err;
       }
     },
-    onError: (message: string) => {
-      toast.error(message);
+    onError: (err: any) => {
+      err.response.status == 401 &&
+        toast.error(err.response.data.message, {
+          className: "top-left",
+        });
     },
   });
 
@@ -49,14 +52,14 @@ export default function LoginPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            loginHandler();
+            login();
           }}
           className="flex flex-col flex-grow pt-16 gap-3 w-full sm:px-12 md:px-0 lg:px-4 xl:px-12"
         >
           {forms.map((form, i) => (
             <Input
               name={form.name}
-              value={credentials[form.name]}
+              value={credentials[form.name] || ""}
               type={
                 form.name == "password"
                   ? hidePassword

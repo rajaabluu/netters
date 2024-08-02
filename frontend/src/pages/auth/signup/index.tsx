@@ -7,20 +7,20 @@ import Loader from "../../../components/loader/loader";
 
 export default function SignUpPage() {
   const forms = [
-    { label: "Name", name: "fullName", type: "text" },
+    { label: "Name", name: "name", type: "text" },
     { label: "Username", name: "username", type: "text" },
     { label: "Email", name: "email", type: "email" },
     { label: "Password", name: "password", type: "password" },
   ];
 
   const [credentials, setCredentials] = useState<Record<string, any>>({
-    fullName: "",
+    name: "",
     username: "",
     email: "",
     password: "",
   });
 
-  const [validationError, setValidationError] = useState({});
+  const [validationErrors, setValidationErrors] = useState<any>();
 
   const [hidePassword, setHidePassword] = useState(true);
 
@@ -33,12 +33,18 @@ export default function SignUpPage() {
     try {
       const res = await api.post("/auth/signup", credentials);
       if (res.status == 201) return res.data;
-    } catch (err) {}
+    } catch (err) {
+      throw err;
+    }
   };
 
   const { mutate: signUp, isPending } = useMutation({
     mutationFn: handleSignUp,
     onSuccess: () => {},
+    onError: (err: any) => {
+      if (err.response.status == 422)
+        setValidationErrors(err.response.data.errors);
+    },
   });
 
   useEffect(() => {
@@ -48,8 +54,8 @@ export default function SignUpPage() {
   return (
     <div className="flex h-screen">
       <div className="flex max-md:hidden md:flex-grow bg-[#18181B]"></div>
-      <div className="flex flex-col max-md:flex-grow md:w-2/3 px-[8%] sm:text-center sm:px-28 md:px-16 lg:px-12 xl:px-20 2xl:px-28 lg:w-1/2">
-        <div className="mt-44">
+      <div className="flex flex-col justify-center h-screen max-md:flex-grow md:w-2/3 px-[8%] sm:text-center sm:px-28 md:px-16 lg:px-12 xl:px-20 2xl:px-28 lg:w-1/2">
+        <div className="-mt-8">
           <h1 className="font-semibold text-3xl text-slate-700">Sign Up</h1>
           <p className="text-slate-500">Create your account below.</p>
         </div>
@@ -59,7 +65,7 @@ export default function SignUpPage() {
             signUp();
           }}
           method="POST"
-          className="flex flex-grow flex-col  pt-16 gap-3 w-full lg:px-4 xl:px-12"
+          className="flex flex-col  pt-16 gap-3 w-full lg:px-4 xl:px-12"
         >
           {forms.map((form, i) => (
             <Input
@@ -77,7 +83,7 @@ export default function SignUpPage() {
               onChange={handleChange}
             >
               {form.name == "password" && (
-                <div className="flex absolute border border-l-0 border-slate-300 rounded-r-md right-0 -translate-y-1/2 top-1/2 z-[2] h-full items-center pl-3 pr-4 bg-white">
+                <div className="flex h-[2.6rem] max-w-20 max-h-20 absolute border border-l-0 border-slate-300 rounded-r-md right-0  top-0 z-[2]items-center pl-3 pr-4 bg-white">
                   <span
                     onClick={() => setHidePassword((h) => !h)}
                     className="p-1 h-full flex items-center pl-4 border-l border-slate-400 "
@@ -89,6 +95,11 @@ export default function SignUpPage() {
                     )}
                   </span>
                 </div>
+              )}
+              {validationErrors?.[form.name] && (
+                <small className="text-red-500 text-left w-full flex">
+                  {validationErrors[form.name].message}
+                </small>
               )}
             </Input>
           ))}

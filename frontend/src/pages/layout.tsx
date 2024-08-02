@@ -70,7 +70,7 @@ export default function Layout() {
         <h1 className="max-xl:hidden text-2xl font-semibold text-neutral-700">
           netters.
         </h1>
-        <div className="flex sm:flex-col max-xl:items-center max-sm:justify-evenly w-full sm:gap-10 sm:mt-20 lg:mt-28">
+        <div className="flex sm:flex-col max-xl:items-center max-sm:justify-evenly w-full sm:gap-10 sm:mt-20 xl:mt-28">
           {menu.map((m, i) => {
             return (
               <Link
@@ -99,9 +99,11 @@ export default function Layout() {
           <h1 className="font-semibold text-neutral-800 text-xl sm:hidden">
             netters.
           </h1>
-          <div className="flex gap-3 items-center">
+          <div
+            className="flex gap-3 items-center"
+            onClick={() => setfloatingMenu((f) => !f)}
+          >
             <img
-              onClick={() => setfloatingMenu((f) => !f)}
               src="https://picsum.photos/seed/picsum/500"
               className="rounded-full size-10 "
               alt=""
@@ -112,7 +114,7 @@ export default function Layout() {
             </div>
           </div>
           {floatingMenu && (
-            <div className=" border border-neutral-300 rounded-md shadow-md bg-white absolute max-sm:top-[4.2rem] max-sm:right-6 sm:left-20 sm:bottom-0 flex flex-col">
+            <div className=" border border-neutral-300 rounded-md shadow-md bg-white absolute max-sm:top-[4.2rem] max-sm:right-6 sm:left-20 sm:bottom-0 xl:bottom-16 xl:left-1 flex flex-col">
               <div className="px-4 pt-2 pb-3 min-w-[12rem]">
                 <h1 className="text-neutral-800 font-medium text-sm sm:text-base">
                   Asep Rendang
