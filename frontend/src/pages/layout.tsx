@@ -11,13 +11,64 @@ import {
   HomeIcon as HomeActiveIcon,
   UserCircleIcon as UserActiveIcon,
 } from "@heroicons/react/24/solid";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ReactNode, useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import {
+  Link,
+  Navigate,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import api from "../api/config";
+import Loader from "../components/loader/loader";
+import { toast } from "sonner";
 
 export default function Layout() {
+  const navigate = useNavigate();
   const location = useLocation();
   const [floatingMenu, setfloatingMenu] = useState<boolean>(false);
+  const { mutate: logout } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await api.post("/auth/logout");
+        if (res.status == 200) {
+          return res.data;
+        } else {
+          return null;
+        }
+      } catch (err) {
+        return null;
+      }
+    },
+    onSuccess: async () => {
+      navigate("/auth/login");
+      toast.success("Logout Success");
+    },
+  });
+
+  const { data: auth, isLoading } = useQuery({
+    queryKey: ["auth"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/auth/me", {
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        });
+        if (res.status == 200) {
+          return res.data;
+        } else {
+          return null;
+        }
+      } catch (err) {
+        return null;
+      }
+    },
+  });
   const menu: {
     label: string;
     link: string;
@@ -64,13 +115,23 @@ export default function Layout() {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="h-screen w-screen flex justify-center items-center">
+        <Loader className="size-16 invert" />
+      </div>
+    );
+  }
+
+  if (!auth) return <Navigate to={"/auth/login"} />;
+
   return (
     <div className="h-screen w-screen sm:flex">
       <div className="fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:static sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-6 xl:pr-20 xl:pl-12 ">
         <h1 className="max-xl:hidden text-2xl font-semibold text-neutral-700">
           netters.
         </h1>
-        <div className="flex sm:flex-col max-xl:items-center max-sm:justify-evenly w-full sm:gap-10 sm:mt-20 xl:mt-28">
+        <div className="flex sm:flex-col max-xl:items-center max-sm:justify-evenly w-full sm:gap-8 sm:mt-4 xl:mt-20">
           {menu.map((m, i) => {
             return (
               <Link
@@ -95,38 +156,37 @@ export default function Layout() {
             );
           })}
         </div>
-        <div className="max-sm:fixed max-sm:z-[999] max-sm:bg-white top-0 left-0 right-0 py-4 px-6 justify-between border-b border-b-slate-300 sm:border-0 sm:p-0 flex gap-3 mt-auto items-center relative xl:border border-slate-300 xl:px-3 xl:py-2 xl:pr-6 xl:rounded-full">
+        <div className="max-sm:fixed max-sm:z-[999] max-sm:bg-white top-0 left-0 right-0 py-4 px-6 justify-between border-b border-b-slate-300 sm:border-0 sm:p-0 flex gap-3 mt-auto items-center relative ">
           <h1 className="font-semibold text-neutral-800 text-xl sm:hidden">
             netters.
           </h1>
           <div
-            className="flex gap-3 items-center"
+            className="flex gap-3 items-center xl:w-52 cursor-pointer xl:border border-slate-300 xl:px-3 xl:py-2 xl:pr-6 xl:rounded-full"
             onClick={() => setfloatingMenu((f) => !f)}
           >
             <img
-              src="https://picsum.photos/seed/picsum/500"
-              className="rounded-full size-10 "
+              src={auth.profileImage ?? "/img/default.png"}
+              className="rounded-full size-10 object-cover"
               alt=""
             />
             <div className="max-xl:hidden">
-              <h1 className="font-medium">Asep Rendang</h1>
-              <p className="text-sm -mt-0.5 text-slate-600">@asepzyt</p>
+              <h1 className="font-medium">{auth.name.split(" ")[0]} </h1>
+              <p className="text-sm -mt-0.5 text-slate-600">@{auth.username}</p>
             </div>
           </div>
           {floatingMenu && (
             <div className=" border border-neutral-300 rounded-md shadow-md bg-white absolute max-sm:top-[4.2rem] max-sm:right-6 sm:left-20 sm:bottom-0 xl:bottom-16 xl:left-1 flex flex-col">
               <div className="px-4 pt-2 pb-3 min-w-[12rem]">
-                <h1 className="text-neutral-800 font-medium text-sm sm:text-base">
-                  Asep Rendang
-                </h1>
-                <p className="text-xs text-[0.85rem] text-neutral-600">
-                  @aseptzy6
-                </p>
+                <h1 className="text-neutral-800 font-medium ">{auth.name}</h1>
+                <p className="text-sm text-neutral-600">@{auth.username}</p>
               </div>
               <div className="flex flex-col text-sm *:px-4 cursor-pointer hover:bg-slate-200">
-                <span className="py-3 border-t border-slate-200  flex items-center gap-2">
-                  <p>
-                    Logout from <span>@aseptzy6</span>{" "}
+                <span
+                  onClick={() => logout()}
+                  className="py-3 border-t border-slate-200  flex items-center gap-2 "
+                >
+                  <p className="text-sm">
+                    Logout from <span>@{auth.username}</span>{" "}
                   </p>
                 </span>
               </div>

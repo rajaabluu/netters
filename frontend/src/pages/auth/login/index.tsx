@@ -1,44 +1,43 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Input from "../../../components/forms/input";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/20/solid";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../api/config";
 import Loader from "../../../components/loader/loader";
 import { toast } from "sonner";
 
 export default function LoginPage() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const forms = [
     { label: "Username", name: "username", type: "text" },
     { label: "Password", name: "password", type: "password" },
   ];
-
   const [credentials, setCredentials] = useState<Record<string, any>>({
     email: "",
     password: "",
   });
-
   const [hidePassword, setHidePassword] = useState(true);
-
   const handleChange = (e: any) =>
     setCredentials((data) => ({ ...data, [e.target.id]: e.target.value }));
-
   const { mutate: login, isPending } = useMutation({
     mutationFn: async () => {
       try {
         const res = await api.post("/auth/login", credentials);
         if (res.status == 200) {
-          console.log(res.data);
+          return res.data;
         }
       } catch (err: any) {
         throw err;
       }
     },
     onError: (err: any) => {
-      err.response.status == 401 &&
-        toast.error(err.response.data.message, {
-          className: "top-left",
-        });
+      err.response.status == 401 && toast.error(err.response.data.message);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
+      navigate("/");
     },
   });
 
