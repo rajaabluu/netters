@@ -1,11 +1,10 @@
 import {
   useInfiniteQuery,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import clsx from "clsx";
-import { ChangeEvent, Fragment, useEffect, useState } from "react";
+import { ChangeEvent, Fragment, useState } from "react";
 import api from "../api/config";
 import Loader from "../components/loader/loader";
 import Post from "../components/post/post";
@@ -13,6 +12,7 @@ import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import ReactTextareaAutosize from "react-textarea-autosize";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
+import { useAuth } from "../context/auth_context";
 
 export default function HomePage() {
   const [type, setType] = useState<"all" | "following">("all");
@@ -22,7 +22,7 @@ export default function HomePage() {
     images: [],
   });
   const queryClient = useQueryClient();
-  const { data: auth } = useQuery<any>({ queryKey: ["auth"] });
+  const { auth } = useAuth();
 
   const { data: posts, isLoading } = useInfiniteQuery({
     queryKey: ["posts", type],
@@ -81,10 +81,6 @@ export default function HomePage() {
   //   queryClient.invalidateQueries({ queryKey: ["posts", type] });
   // }, [type]);
 
-  useEffect(() => {
-    console.log(newPost.images);
-  }, [newPost]);
-
   return (
     <div>
       <div className="flex *:w-1/2 text-center py-4 sm:py-5 text-neutral-600 border-b border-b-slate-300 sticky top-0 *:cursor-pointer max-md:text-sm bg-white z-[10]">
@@ -117,19 +113,19 @@ export default function HomePage() {
           !postModalOpen && "max-sm:hidden"
         )}
       >
-        <div className="flex justify-between px-4 py-4 items-center sm:hidden">
+        <div className="flex justify-between px-5 py-4 items-center sm:hidden">
           <XMarkIcon
             onClick={() => setPostModalOpen(false)}
-            className="size-8 cursor-pointer"
+            className="size-7 cursor-pointer"
           />
           <div
             onClick={() => createNewPost()}
-            className="px-5 font-medium py-1.5 bg-black text-white rounded-full"
+            className="px-5 font-medium py-1.5 max-sm:text-sm bg-black text-white rounded-full"
           >
             {pendingNewPost ? <Loader className="size-6" /> : "Posting"}
           </div>
         </div>
-        <div className="flex mt-2 px-4 gap-4 sm:min-h-32 sm:py-3">
+        <div className="flex mt-2 px-5 gap-4 sm:min-h-32 sm:py-3">
           <img
             src={auth.profileImage ?? "/img/default.png"}
             className="size-10 object-cover rounded-full"

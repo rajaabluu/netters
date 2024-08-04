@@ -11,24 +11,26 @@ import {
   HomeIcon as HomeActiveIcon,
   UserCircleIcon as UserActiveIcon,
 } from "@heroicons/react/24/solid";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { ReactNode, useState } from "react";
+import { ReactNode, useRef, useState } from "react";
 import {
   Link,
-  Navigate,
+  matchPath,
   Outlet,
   useLocation,
   useNavigate,
 } from "react-router-dom";
 import api from "../api/config";
-import Loader from "../components/loader/loader";
 import { toast } from "sonner";
+import { useAuth } from "../context/auth_context";
 
 export default function Layout() {
+  const { auth, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [floatingMenu, setfloatingMenu] = useState<boolean>(false);
+  const queryClient = useQueryClient();
   const { mutate: logout } = useMutation({
     mutationFn: async () => {
       try {
@@ -43,32 +45,12 @@ export default function Layout() {
       }
     },
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
       navigate("/auth/login");
       toast.success("Logout Success");
     },
   });
 
-  const { data: auth, isLoading } = useQuery({
-    queryKey: ["auth"],
-    queryFn: async () => {
-      try {
-        const res = await api.get("/auth/me", {
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-        });
-        if (res.status == 200) {
-          return res.data;
-        } else {
-          return null;
-        }
-      } catch (err) {
-        return null;
-      }
-    },
-  });
   const menu: {
     label: string;
     link: string;
@@ -115,19 +97,19 @@ export default function Layout() {
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="h-screen w-screen flex justify-center items-center">
-        <Loader className="size-16 invert" />
-      </div>
-    );
-  }
+  const match = matchPath("/:username", location.pathname);
 
-  if (!auth) return <Navigate to={"/auth/login"} />;
+  if (isLoading) return null;
 
   return (
     <div className="h-screen w-screen sm:flex">
-      <div className="fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:static sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-6 xl:pr-20 xl:pl-12 ">
+      <div
+        id="bar"
+        className={clsx(
+          "fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:static sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-6 xl:pr-20 xl:pl-12",
+          match && "max-sm:hidden"
+        )}
+      >
         <h1 className="max-xl:hidden text-2xl font-semibold text-neutral-700">
           netters.
         </h1>
@@ -175,7 +157,7 @@ export default function Layout() {
             </div>
           </div>
           {floatingMenu && (
-            <div className=" border border-neutral-300 rounded-md shadow-md bg-white absolute max-sm:top-[4.2rem] max-sm:right-6 sm:left-20 sm:bottom-0 xl:bottom-16 xl:left-1 flex flex-col">
+            <div className="w-max border border-neutral-300 rounded-md shadow-md bg-white absolute max-sm:top-[4.2rem] max-sm:right-6 sm:left-20 sm:bottom-0 xl:bottom-16 xl:left-1 flex flex-col">
               <div className="px-4 pt-2 pb-3 min-w-[12rem]">
                 <h1 className="text-neutral-800 font-medium ">{auth.name}</h1>
                 <p className="text-sm text-neutral-600">@{auth.username}</p>
@@ -194,7 +176,12 @@ export default function Layout() {
           )}
         </div>
       </div>
-      <div className="max-sm:pt-[4.5rem] h-screen overflow-scroll flex-grow border-x border-x-slate-300 sm:max-w-[600px] ">
+      <div
+        className={clsx(
+          "h-screen overflow-scroll flex-grow border-x border-x-slate-300 sm:max-w-[600px]",
+          !match && "max-sm:pt-[4.5rem]"
+        )}
+      >
         <Outlet />
       </div>
     </div>
