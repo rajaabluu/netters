@@ -10,14 +10,14 @@ import moment from "moment";
 import Loader from "../loader/loader";
 import api from "../../api/config";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, matchPath, useLocation, useParams } from "react-router-dom";
+import { Link, matchPath, useLocation } from "react-router-dom";
 import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid";
-import { useState } from "react";
 import Popover from "../menu/popover";
 import { toast } from "sonner";
+import useModal from "../../hooks/useModal";
 
 export default function Post({ post, user }: { post: any; user: any }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { show, toggle } = useModal();
   const l = useLocation();
   const queryClient = useQueryClient();
   const pathnameMatch = matchPath("/:username", l.pathname);
@@ -106,9 +106,9 @@ export default function Post({ post, user }: { post: any; user: any }) {
       </div>
 
       <div className="flex flex-col justify-between text-slate-400">
-        <div className="relative" onClick={() => setMenuOpen((m) => !m)}>
+        <div className="relative" onClick={toggle}>
           <EllipsisHorizontalIcon className="size-5 text-slate-600" />
-          <Popover open={menuOpen} onClose={() => setMenuOpen(false)}>
+          <Popover open={show} onClose={() => {}}>
             {user._id !== post.user._id ? (
               <div className="w-max">
                 {isFollowing ? "Unfollow" : "Follow"} @{post.user.username}

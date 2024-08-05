@@ -22,6 +22,7 @@ export default function ProfilePage() {
       if (res.status == 200) return res.data;
     },
   });
+
   const { data: posts } = useInfiniteQuery({
     initialPageParam: 1,
     enabled: !!type && !!profile,
@@ -41,49 +42,51 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    function handleScroll() {
-      const el = ref.current?.parentElement;
-      if (el) {
-        const scrollThreshold = window.matchMedia("(max-width: 640px)").matches
-          ? 304
-          : 334;
-        const isInView = el.scrollTop > scrollThreshold;
-        if (inView !== isInView) {
-          setInView(isInView);
-        }
+    function handle() {
+      const scrollThreshold = window.matchMedia("(max-width: 640px)").matches
+        ? 304
+        : 334;
+      if (ref.current && ref.current.scrollTop > scrollThreshold) {
+        if (!inView) setInView(true);
+      } else {
+        if (inView) setInView(false);
       }
     }
+    const el = document.querySelector("#n");
 
-    const parentElement = ref.current?.parentElement;
-    parentElement?.addEventListener("scroll", handleScroll);
+    console.log(el);
 
-    return () => {
-      parentElement?.removeEventListener("scroll", handleScroll);
-    };
-  }, [inView]);
+    ref.current?.addEventListener("scroll", () => console.log("TEST"));
+
+    return () => ref.current?.removeEventListener("scroll", handle);
+  }, []);
 
   if (isLoading) return null;
 
   return (
-    <div
-      ref={ref}
-      className="bg-white left-0 top-0 right-0  sm:h-fit flex flex-col"
-    >
+    <div ref={(ref) => ref} className="bg-white sm:h-fit flex flex-col">
       <div
         className={clsx(
-          " px-4 py-3 left-0 top-0 right-0 z-[1000]",
-          inView && " sm:sticky max-sm:fixed "
+          "px-4 py-3 left-0 top-0 right-0 sm:left-[5.55rem] max-h-16 sm:max-w-[600px] z-[1000] flex items-center gap-5",
+          inView &&
+            "fixed bg-[rgba(255,255,255,0.8)] border border-t-0 border-slate-300 backdrop-blur-sm"
         )}
       >
         {/* Back Button */}
-        <div className="p-1.5 bg-neutral-500 w-fit rounded-full">
+        <div className="p-1.5 bg-neutral-500 w-fit h-fit rounded-full">
           <ArrowLeftIcon className="size-6 invert" />
+        </div>
+        <div className={clsx(!!!inView && "hidden")}>
+          <h1 className="font-semibold ">{profile.username}</h1>
+          <p className="text-sm text-neutral-600">
+            {profile.followers.length} Followers
+          </p>
         </div>
       </div>
       <div
         className={clsx(
-          "w-full p-4 bg-gray-300 h-36 sm:h-44 ",
-          !inView && "-mt-[3.75rem]"
+          "w-full p-4 bg-gray-300 h-36 sm:h-44",
+          !inView && "-mt-[3.95rem] "
         )}
       ></div>
       <div className="flex py-3 px-4 pl-5">
@@ -132,7 +135,7 @@ export default function ProfilePage() {
           </span>
         </div>
       </div>
-      <div className="flex *:w-1/2 mt-8 text-center py-4 sm:py-5 text-neutral-600 border-b border-b-slate-300 sticky top-[4rem] *:cursor-pointer max-md:text-sm bg-white z-[10]">
+      <div className="flex *:w-1/2 mt-8 text-center py-4 sm:py-5 text-neutral-600 border-b border-b-slate-300 sticky top-[3.8rem] *:cursor-pointer max-md:text-sm bg-white z-[10]">
         <span
           onClick={() => {
             setType("post");

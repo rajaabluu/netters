@@ -125,10 +125,10 @@ export default function HomePage() {
             {pendingNewPost ? <Loader className="size-6" /> : "Posting"}
           </div>
         </div>
-        <div className="flex mt-2 px-5 gap-4 sm:min-h-32 sm:py-3">
+        <div className="flex mt-2 px-4 gap-4 sm:min-h-32 sm:py-3">
           <img
             src={auth.profileImage ?? "/img/default.png"}
-            className="size-10 object-cover rounded-full"
+            className="size-11 object-cover rounded-full"
             alt=""
           />
           <ReactTextareaAutosize
