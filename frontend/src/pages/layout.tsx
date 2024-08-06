@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import {
   Link,
   matchPath,
@@ -24,12 +24,13 @@ import {
 import api from "../api/config";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth_context";
+import useModal from "../hooks/useModal";
 
 export default function Layout() {
   const { auth, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [floatingMenu, setfloatingMenu] = useState<boolean>(false);
+  const { show, toggle } = useModal();
   const queryClient = useQueryClient();
   const { mutate: logout } = useMutation({
     mutationFn: async () => {
@@ -90,14 +91,22 @@ export default function Layout() {
     },
     {
       label: "Profile",
-      link: "/profile",
+      link: "" + auth?.username,
       icon: <UserCircleIcon className="size-7 sm:size-8 xl:size-7" />,
       activeIcon: <UserActiveIcon className="size-7 sm:size-8 xl:size-7" />,
       active: location.pathname === "/profile",
     },
   ];
 
-  const match = matchPath("/:username", location.pathname);
+  const pages = ["/notification"];
+  const hiddenTopBarPages = ["/notification"];
+
+  const topbarHidden = hiddenTopBarPages.some((s) =>
+    location.pathname.includes(s)
+  );
+  const includePage = pages.some((s) => location.pathname.includes(s));
+
+  const match = !includePage && matchPath("/:username", location.pathname);
 
   if (isLoading) return null;
 
@@ -106,7 +115,7 @@ export default function Layout() {
       <div
         id="bar"
         className={clsx(
-          "fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:static sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-6 xl:pr-20 xl:pl-12",
+          "fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:fixed sm:border-r sm:border-r-slate-300 sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-6 xl:pr-20 xl:pl-12",
           match && "max-sm:hidden"
         )}
       >
@@ -138,13 +147,18 @@ export default function Layout() {
             );
           })}
         </div>
-        <div className="max-sm:fixed max-sm:z-[999] max-sm:bg-white top-0 left-0 right-0 py-4 px-6 justify-between border-b border-b-slate-300 sm:border-0 sm:p-0 flex gap-3 mt-auto items-center relative ">
+        <div
+          className={clsx(
+            "max-sm:fixed max-sm:z-[999] max-sm:bg-white top-0 left-0 right-0 py-4 px-6 justify-between border-b border-b-slate-300 sm:border-0 sm:p-0 flex gap-3 mt-auto items-center relative",
+            topbarHidden && "max-sm:hidden"
+          )}
+        >
           <h1 className="font-semibold text-neutral-800 text-xl sm:hidden">
             netters.
           </h1>
           <div
             className="flex gap-3 items-center xl:w-52 cursor-pointer xl:border border-slate-300 xl:px-3 xl:py-2 xl:pr-6 xl:rounded-full"
-            onClick={() => setfloatingMenu((f) => !f)}
+            onClick={() => toggle()}
           >
             <img
               src={auth.profileImage ?? "/img/default.png"}
@@ -156,7 +170,7 @@ export default function Layout() {
               <p className="text-sm -mt-0.5 text-slate-600">@{auth.username}</p>
             </div>
           </div>
-          {floatingMenu && (
+          {show && (
             <div className="w-max border border-neutral-300 rounded-md shadow-md bg-white absolute max-sm:top-[4.2rem] max-sm:right-6 sm:left-20 sm:bottom-0 xl:bottom-16 xl:left-1 flex flex-col">
               <div className="px-4 pt-2 pb-3 min-w-[12rem]">
                 <h1 className="text-neutral-800 font-medium ">{auth.name}</h1>
@@ -178,8 +192,8 @@ export default function Layout() {
       </div>
       <div
         className={clsx(
-          "h-screen overflow-scroll flex-grow border-x border-x-slate-300 sm:max-w-[600px]",
-          !match && "max-sm:pt-[4.5rem]"
+          "min-h-screen h-max flex-grow border-x sm:ml-[5.6rem] xl:ml-[21rem] border-x-slate-300 sm:w-full sm:max-w-[600px]",
+          !match && !topbarHidden && "max-sm:pt-[4.5rem]"
         )}
       >
         <Outlet />

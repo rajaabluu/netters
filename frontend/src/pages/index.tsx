@@ -13,10 +13,11 @@ import ReactTextareaAutosize from "react-textarea-autosize";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth_context";
+import useModal from "../hooks/useModal";
 
 export default function HomePage() {
   const [type, setType] = useState<"all" | "following">("all");
-  const [postModalOpen, setPostModalOpen] = useState(false);
+  const { show, toggle } = useModal();
   const [newPost, setNewPost] = useState({
     text: "",
     images: [],
@@ -69,7 +70,7 @@ export default function HomePage() {
         images: [],
         text: "",
       });
-      setPostModalOpen(false);
+      toggle();
       toast.success("Berhasil Membuat Postingan", {
         position: "top-right",
         duration: 1000,
@@ -100,22 +101,22 @@ export default function HomePage() {
 
       {/* POST MODAL BUTTON */}
       <div
-        onClick={() => setPostModalOpen(true)}
+        onClick={() => toggle()}
         className="fixed z-[9999] right-6 bottom-24 border border-slate-500 sm:hidden bg-black text-white fill-white p-1 rounded-full"
       >
-        <PlusIcon className="size-10 cursor-pointer" />
+        <PlusIcon className="size-9 cursor-pointer" />
       </div>
       {/*END POST MODAL BUTTON */}
 
       <div
         className={clsx(
           "max-sm:fixed top-0 left-0 max-sm:h-screen max-sm:w-screen bg-white max-sm:z-[9999] flex flex-col",
-          !postModalOpen && "max-sm:hidden"
+          !show && "max-sm:hidden"
         )}
       >
         <div className="flex justify-between px-5 py-4 items-center sm:hidden">
           <XMarkIcon
-            onClick={() => setPostModalOpen(false)}
+            onClick={() => toggle()}
             className="size-7 cursor-pointer"
           />
           <div

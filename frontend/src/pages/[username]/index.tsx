@@ -1,15 +1,15 @@
 import { ArrowLeftIcon, CalendarIcon } from "@heroicons/react/20/solid";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/config";
 import moment from "moment";
 import { useAuth } from "../../context/auth_context";
 import clsx from "clsx";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Post from "../../components/post/post";
 
 export default function ProfilePage() {
-  const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const [inView, setInView] = useState(false);
   const [type, setType] = useState<"post" | "likes">("post");
   const { username } = useParams();
@@ -42,29 +42,24 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    function handle() {
-      const scrollThreshold = window.matchMedia("(max-width: 640px)").matches
-        ? 304
-        : 334;
-      if (ref.current && ref.current.scrollTop > scrollThreshold) {
+    const scrollHandler = () => {
+      const ScrollT = window.matchMedia("(max-width: 640px)").matches
+        ? 307
+        : 340;
+      if (window.scrollY > ScrollT) {
         if (!inView) setInView(true);
       } else {
-        if (inView) setInView(false);
+        return setInView(false);
       }
-    }
-    const el = document.querySelector("#n");
-
-    console.log(el);
-
-    ref.current?.addEventListener("scroll", () => console.log("TEST"));
-
-    return () => ref.current?.removeEventListener("scroll", handle);
+    };
+    window.addEventListener("scroll", scrollHandler);
+    return () => window.removeEventListener("scroll", scrollHandler);
   }, []);
 
   if (isLoading) return null;
 
   return (
-    <div ref={(ref) => ref} className="bg-white sm:h-fit flex flex-col">
+    <div className="bg-white flex flex-col">
       <div
         className={clsx(
           "px-4 py-3 left-0 top-0 right-0 sm:left-[5.55rem] max-h-16 sm:max-w-[600px] z-[1000] flex items-center gap-5",
@@ -73,7 +68,10 @@ export default function ProfilePage() {
         )}
       >
         {/* Back Button */}
-        <div className="p-1.5 bg-neutral-500 w-fit h-fit rounded-full">
+        <div
+          onClick={() => navigate(-1)}
+          className="p-1.5 cursor-pointer bg-neutral-500 w-fit h-fit rounded-full"
+        >
           <ArrowLeftIcon className="size-6 invert" />
         </div>
         <div className={clsx(!!!inView && "hidden")}>
@@ -85,7 +83,7 @@ export default function ProfilePage() {
       </div>
       <div
         className={clsx(
-          "w-full p-4 bg-gray-300 h-36 sm:h-44",
+          "w-full p-4 bg-gray-300 !min-h-36 sm:!min-h-44",
           !inView && "-mt-[3.95rem] "
         )}
       ></div>
@@ -131,7 +129,7 @@ export default function ProfilePage() {
           </span>
           <span>
             {profile.followers.length}{" "}
-            <span className="text-slate-600 font-normal">Following</span>
+            <span className="text-slate-600 font-normal">Followers</span>
           </span>
         </div>
       </div>

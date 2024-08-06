@@ -28,7 +28,7 @@ export default function Popover({
     window.addEventListener("click", handleClose);
 
     return () => window.removeEventListener("click", handleClose);
-  }, [onClose]);
+  }, []);
 
   return (
     !!open && (
