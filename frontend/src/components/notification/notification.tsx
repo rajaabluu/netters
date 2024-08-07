@@ -7,7 +7,7 @@ const LikeNotification = ({
   notification: NotificationType;
 }) => {
   return (
-    <div className="flex py-3 px-5 gap-4 border-b border-b-slate-200">
+    <div className="flex py-3 px-5 gap-3.5 border-b border-b-slate-200 items-center">
       <div className="size-10 sm:size-11 min-h-10 sm:min-h-11 sm:min-w-11 min-w-10 rounded-full overflow-hidden">
         <img
           src={
@@ -31,10 +31,7 @@ const LikeNotification = ({
           </span>
           {/* end post text */}
           <span className=" text-slate-500 whitespace-nowrap">
-            {moment(notification.createdAt)
-              .startOf("hours")
-              .fromNow()
-              .replace(/ago/g, "")}
+            {moment(notification.createdAt).fromNow().replace(/ago/g, "")}
           </span>
         </h1>
       </div>
@@ -59,7 +56,7 @@ const FollowNotification = ({
   notification: NotificationType;
 }) => {
   return (
-    <div className="flex py-3 px-5 gap-4 border-b border-b-slate-200">
+    <div className="flex py-3 px-5 gap-3.5 border-b border-b-slate-200 items-center">
       <div className="size-10 sm:size-11 min-h-10 sm:min-h-11 sm:min-w-11 min-w-10 rounded-full overflow-hidden">
         <img
           src={
@@ -71,17 +68,14 @@ const FollowNotification = ({
           alt=""
         />
       </div>
-      <div className="flex max-w-[20rem]">
+      <div className="flex max-w-[20rem] ">
         <h1 className="text-sm text-slate-800">
           <span className="font-medium text-black">
             {notification.from.username}
-          </span>{" "}
-          started following you{" "}
+          </span>
+          <span className="mr-2"> started following you </span>
           <span className=" text-slate-500 whitespace-nowrap">
-            {moment(notification.createdAt)
-              .startOf("hours")
-              .fromNow()
-              .replace(/ago/g, "")}
+            {moment(notification.createdAt).fromNow().replace(/ago/g, "")}
           </span>
         </h1>
       </div>

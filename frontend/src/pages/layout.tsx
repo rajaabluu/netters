@@ -52,6 +52,17 @@ export default function Layout() {
     },
   });
 
+  const pages = ["/notification"];
+  const hiddenTopbarPages = ["/notification"];
+
+  const topbarHidden = hiddenTopbarPages.some((s) =>
+    location.pathname.includes(s)
+  );
+
+  const includePage = pages.some((s) => location.pathname.includes(s));
+
+  const match = !includePage && matchPath("/:username", location.pathname);
+
   const menu: {
     label: string;
     link: string;
@@ -94,19 +105,9 @@ export default function Layout() {
       link: "" + auth?.username,
       icon: <UserCircleIcon className="size-7 sm:size-8 xl:size-7" />,
       activeIcon: <UserActiveIcon className="size-7 sm:size-8 xl:size-7" />,
-      active: location.pathname === "/profile",
+      active: match as boolean,
     },
   ];
-
-  const pages = ["/notification"];
-  const hiddenTopBarPages = ["/notification"];
-
-  const topbarHidden = hiddenTopBarPages.some((s) =>
-    location.pathname.includes(s)
-  );
-  const includePage = pages.some((s) => location.pathname.includes(s));
-
-  const match = !includePage && matchPath("/:username", location.pathname);
 
   if (isLoading) return null;
 

@@ -15,8 +15,9 @@ import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid";
 import Popover from "../menu/popover";
 import { toast } from "sonner";
 import useModal from "../../hooks/useModal";
+import { Post as PostType } from "../../types/post.type";
 
-export default function Post({ post, user }: { post: any; user: any }) {
+export default function Post({ post, user }: { post: PostType; user: any }) {
   const { show, toggle, close } = useModal();
   const l = useLocation();
   const queryClient = useQueryClient();
@@ -60,7 +61,11 @@ export default function Post({ post, user }: { post: any; user: any }) {
       <div className="w-max">
         <img
           className="min-w-10 min-h-10 size-10 sm:size-11 rounded-full object-cover"
-          src={post.user.profileImage ?? "/img/default.png"}
+          src={
+            post.user.profileImage !== null
+              ? post.user.profileImage.url
+              : "/img/default.png"
+          }
           alt=""
         />
       </div>

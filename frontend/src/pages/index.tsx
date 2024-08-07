@@ -14,6 +14,7 @@ import { PhotoIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth_context";
 import useModal from "../hooks/useModal";
+import { Post as PostType } from "../types/post.type";
 
 export default function HomePage() {
   const [type, setType] = useState<"all" | "following">("all");
@@ -215,7 +216,7 @@ export default function HomePage() {
           {posts?.pages.map((page, index) => (
             <Fragment key={index}>
               {page?.data.length > 0 ? (
-                page?.data.map((post: any, i: number) => (
+                page?.data.map((post: PostType, i: number) => (
                   <Post key={i} post={post} user={auth} />
                 ))
               ) : (

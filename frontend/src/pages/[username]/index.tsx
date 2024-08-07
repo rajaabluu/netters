@@ -7,6 +7,8 @@ import { useAuth } from "../../context/auth_context";
 import clsx from "clsx";
 import { Fragment, useEffect, useState } from "react";
 import Post from "../../components/post/post";
+import useFollow from "../../hooks/useFollow";
+import Loader from "../../components/loader/loader";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -22,6 +24,12 @@ export default function ProfilePage() {
       if (res.status == 200) return res.data;
     },
   });
+
+  const { follow, following } = useFollow(profile?._id);
+
+  const isFollowing: boolean = profile?.followers.some(
+    (p: any) => p._id == auth._id
+  );
 
   const { data: posts } = useInfiniteQuery({
     initialPageParam: 1,
@@ -55,6 +63,10 @@ export default function ProfilePage() {
     window.addEventListener("scroll", scrollHandler);
     return () => window.removeEventListener("scroll", scrollHandler);
   }, []);
+
+  useEffect(() => {
+    console.log(isFollowing);
+  }, [profile]);
 
   if (isLoading) return null;
 
@@ -104,8 +116,22 @@ export default function ProfilePage() {
             Edit Profile
           </button>
         ) : (
-          <button className="px-5 py-1.5 h-fit bg-black text-white font-medium rounded-full text-sm ms-auto">
-            Follow
+          <button
+            onClick={() => follow()}
+            className={clsx(
+              "px-5 py-1.5 h-fit  font-medium rounded-full text-sm ms-auto",
+              isFollowing
+                ? "bg-white border border-slate-400 text-neutral-700"
+                : "bg-black text-white"
+            )}
+          >
+            {following ? (
+              <Loader className={clsx("size-5", isFollowing && "invert")} />
+            ) : isFollowing ? (
+              "Unfollow"
+            ) : (
+              "Follow"
+            )}
           </button>
         )}
       </div>
@@ -157,7 +183,7 @@ export default function ProfilePage() {
           <div className="bg-black py-[0.1rem] sm:py-[0.10rem] rounded-full w-full"></div>
         </span>
       </div>
-      <div className="flex flex-col h-[200vh] ">
+      <div className="flex flex-col h-max">
         {!!posts &&
           posts?.pages.map((page, index) => (
             <Fragment key={index}>
