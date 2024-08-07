@@ -10,7 +10,10 @@ const route = require("express").Router();
 route.get("/profile/:username", checkAuth, async (req, res) => {
   const { username } = req.params;
   try {
-    const user = await User.findOne({ username }).select("-password");
+    const user = await User.findOne({ username })
+      .select("-password")
+      .populate("following", "name username profileImage")
+      .populate("followers", "name username profileImage");
     if (!user) return res.status(404).json({ message: "User Not Found" });
     return res.status(200).json(user);
   } catch (err) {
@@ -37,7 +40,7 @@ route.post("/:id/follow", checkAuth, async (req, res) => {
       await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } });
       await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } });
       await Notification.findOneAndDelete({
-        type: "FOLLOW",
+        type: "follow",
         from: req.user._id,
         to: modifiedUser._id,
       });
@@ -47,7 +50,7 @@ route.post("/:id/follow", checkAuth, async (req, res) => {
       await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } });
       // Send Notification
       await new Notification({
-        type: "FOLLOW",
+        type: "follow",
         from: req.user._id,
         to: modifiedUser._id,
       }).save();

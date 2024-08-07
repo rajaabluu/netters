@@ -89,7 +89,10 @@ route.post("/logout", async (req, res) => {
 
 route.get("/me", checkAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password").lean();
+    const user = await User.findById(req.user._id)
+      .select("-password")
+      .populate("following", "name username profileImage")
+      .populate("followers", "name username profileImage");
     return res.status(200).json(user);
   } catch (err) {
     console.log(err);

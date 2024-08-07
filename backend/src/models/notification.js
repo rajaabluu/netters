@@ -15,7 +15,7 @@ const schema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["FOLLOW", "LIKE", "COMMENT"],
+      enum: ["follow", "like", "comment"],
     },
     read: {
       type: Boolean,

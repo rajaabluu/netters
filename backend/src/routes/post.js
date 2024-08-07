@@ -4,6 +4,7 @@ const upload = require("../middleware/multer");
 const { checkAuth } = require("../middleware/protected_route");
 const Notification = require("../models/notification");
 const { default: mongoose } = require("mongoose");
+const cloudinary = require("cloudinary").v2;
 
 // Get All / Followed Users Post
 route.get("/", checkAuth, async (req, res) => {
@@ -38,6 +39,9 @@ route.get("/", checkAuth, async (req, res) => {
         },
       },
       {
+        $unwind: "$user",
+      },
+      {
         $lookup: {
           from: "users",
           localField: "likes",
@@ -53,7 +57,7 @@ route.get("/", checkAuth, async (req, res) => {
           "user.username": 1,
           text: 1,
           images: 1,
-          comments: 1,
+          commentsCount: 1,
           "likes._id": 1,
           "likes.name": 1,
           "likes.username": 1,
@@ -104,6 +108,9 @@ route.get("/:id/user", checkAuth, async (req, res) => {
           foreignField: "_id",
           as: "user",
         },
+      },
+      {
+        $unwind: "$user",
       },
       {
         $lookup: {
@@ -178,6 +185,9 @@ route.get("/:id/user/likes", checkAuth, async (req, res) => {
         },
       },
       {
+        $unwind: "$user",
+      },
+      {
         $lookup: {
           from: "users",
           localField: "likes",
@@ -250,6 +260,8 @@ route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
     post.save();
     return res.status(201).json(post);
   } catch (err) {
+    console.log(err);
+
     return res.status(500).json({ message: err.message });
   }
 });
@@ -265,7 +277,7 @@ route.post("/:id/comment", checkAuth, async (req, res) => {
     post.comments.push({ user: req.user._id, text: req.body.text });
     await post.save();
     await new Notification({
-      type: "COMMENT",
+      type: "comment",
       postId: post._id,
       from: req.user._id,
       to: post.user,
@@ -287,20 +299,20 @@ route.post("/:id/like", checkAuth, async (req, res) => {
     if (hasLiked) {
       await Post.findByIdAndUpdate(id, { $pull: { likes: req.user._id } });
       await Notification.findOneAndDelete({
-        type: "LIKE",
+        type: "like",
         from: req.user._id,
         to: post.user,
-        postId: post._id,
+        post: post._id,
       });
       return res.status(200).json({ message: "Post Unliked" });
     }
     await Post.findByIdAndUpdate(id, { $push: { likes: req.user._id } });
     if (post.user.toString() !== req.user._id.toString()) {
       await new Notification({
-        type: "LIKE",
+        type: "like",
         from: req.user._id,
         to: post.user,
-        postId: post._id,
+        post: post._id,
       }).save();
     }
     return res.status(200).json({ message: "Post Liked" });
@@ -322,6 +334,8 @@ route.delete("/:id", checkAuth, async (req, res) => {
       return res
         .status(401)
         .json({ message: "You're not permitted to do this operation" });
+
+    await Notification.deleteMany({ post: post._id });
     await Post.findByIdAndDelete(post._id);
     return res.status(200).json({ message: "Post deleted Successfully" });
   } catch (err) {

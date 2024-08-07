@@ -21,7 +21,8 @@ cloudinary.config({
 
 app.use(
   cors({
-    origin: "*",
+    origin: true,
+    credentials: true,
   })
 );
 
