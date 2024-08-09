@@ -1,7 +1,7 @@
 import { UserImage } from "./image.type";
 
 export interface User {
-  _id: string;
+  _id: string | any;
   name: string;
   username: string;
   followers: UserPreview[];
