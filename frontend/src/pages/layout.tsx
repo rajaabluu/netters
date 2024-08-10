@@ -11,7 +11,7 @@ import {
   HomeIcon as HomeActiveIcon,
   UserCircleIcon as UserActiveIcon,
 } from "@heroicons/react/24/solid";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ReactNode } from "react";
 import {
@@ -25,6 +25,7 @@ import api from "../api/config";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth_context";
 import useModal from "../hooks/useModal";
+import { User } from "../types/user.type";
 
 export default function Layout() {
   const { auth, isLoading } = useAuth();
@@ -32,6 +33,15 @@ export default function Layout() {
   const location = useLocation();
   const { show, toggle } = useModal();
   const queryClient = useQueryClient();
+
+  const { data: suggestedUsers, isLoading: loadingSuggestedUsers } = useQuery({
+    queryKey: ["suggested-users"],
+    queryFn: async () => {
+      const res = await api.get("user/suggested");
+      if (res.status == 200) return res.data;
+    },
+  });
+
   const { mutate: logout } = useMutation({
     mutationFn: async () => {
       try {
@@ -73,38 +83,36 @@ export default function Layout() {
     {
       label: "Home",
       link: "/",
-      icon: <HomeIcon className="size-7 sm:size-8 xl:size-7" />,
-      activeIcon: <HomeActiveIcon className="size-7 sm:size-8 xl:size-7" />,
+      icon: <HomeIcon className="size-7 xl:size-7" />,
+      activeIcon: <HomeActiveIcon className="size-7 xl:size-7" />,
       active: location.pathname === "/",
     },
     {
       label: "Search",
       link: "/search",
-      icon: <MagnifyingGlassIcon className="size-7 sm:size-8 xl:size-7" />,
-      activeIcon: (
-        <MagnifyingGlassIcon className="size-7 sm:size-8 xl:size-7" />
-      ),
+      icon: <MagnifyingGlassIcon className="size-7 xl:size-7" />,
+      activeIcon: <MagnifyingGlassIcon className="size-7 xl:size-7" />,
       active: location.pathname.includes("/search"),
     },
     {
       label: "Bookmark",
       link: "/bookmark",
-      icon: <BookmarkIcon className="size-7 sm:size-8 xl:size-7" />,
-      activeIcon: <BookmarkActiveIcon className="size-7 sm:size-8 xl:size-7" />,
+      icon: <BookmarkIcon className="size-7 xl:size-7" />,
+      activeIcon: <BookmarkActiveIcon className="size-7 xl:size-7" />,
       active: location.pathname.includes("/bookmark"),
     },
     {
       label: "Notification",
       link: "/notification",
-      icon: <BellIcon className="size-7 sm:size-8 xl:size-7" />,
-      activeIcon: <BellActiveIcon className="size-7 sm:size-8 xl:size-7" />,
+      icon: <BellIcon className="size-7 xl:size-7" />,
+      activeIcon: <BellActiveIcon className="size-7 xl:size-7" />,
       active: location.pathname.includes("/notification"),
     },
     {
       label: "Profile",
       link: "" + auth?.username,
-      icon: <UserCircleIcon className="size-7 sm:size-8 xl:size-7" />,
-      activeIcon: <UserActiveIcon className="size-7 sm:size-8 xl:size-7" />,
+      icon: <UserCircleIcon className="size-7 xl:size-7" />,
+      activeIcon: <UserActiveIcon className="size-7  xl:size-7" />,
       active: match as boolean,
     },
   ];
@@ -116,7 +124,7 @@ export default function Layout() {
       <div
         id="bar"
         className={clsx(
-          "fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:fixed sm:border-r sm:border-r-slate-300 sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-6 xl:pr-20 xl:pl-12",
+          "fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:fixed sm:border-r sm:border-r-slate-300 sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-4 xl:pr-20 xl:pl-12",
           match && "max-sm:hidden"
         )}
       >
@@ -193,11 +201,50 @@ export default function Layout() {
       </div>
       <div
         className={clsx(
-          "min-h-screen h-max flex-grow border-x sm:ml-[5.6rem] xl:ml-[21rem] border-x-slate-300 sm:w-full sm:max-w-[600px]",
+          " flex h-max flex-grow border-x sm:ml-[4.55rem] xl:ml-[21rem] border-x-slate-300",
           !match && !topbarHidden && "max-sm:pt-[4.5rem]"
         )}
       >
-        <Outlet />
+        <div className="min-h-screen sm:w-full sm:max-w-[600px] flex-grow border-r border-r-slate-300">
+          <Outlet />
+        </div>
+        {/* Suggested Users */}
+        <div className="max-lg:hidden py-4 px-4 flex-grow sticky top-0 h-fit max-h-screen max-w-[25rem]">
+          <div className="flex h-fit flex-col border border-slate-300 rounded-lg px-2 py-2 pb-4">
+            <div>
+              <h1 className="text-xl mx-3 font-bold py-2 text-slate-800">
+                To Follow
+              </h1>
+            </div>
+            {loadingSuggestedUsers
+              ? null
+              : suggestedUsers.map((user: User, i: number) => (
+                  <div className="flex items-center px-3 py-3 gap-3" key={i}>
+                    <div className=" rounded-full overflow-hidden size-10 min-h-10 min-w-10">
+                      <img
+                        src={
+                          !!user.profileImage
+                            ? user.profileImage.url
+                            : "/img/default.png"
+                        }
+                        alt=""
+                        className="object-cover size-full"
+                      />
+                    </div>
+                    <Link to={`/${user.username}`}>
+                      <h1 className="font-semibold">{user.name}</h1>
+                      <h5 className="text-sm text-slate-600">
+                        @{user.username}
+                      </h5>
+                    </Link>
+                    <button className="px-3 py-1.5 text-white text-sm bg-black rounded-full ms-auto font-medium">
+                      Follow
+                    </button>
+                  </div>
+                ))}
+          </div>
+        </div>
+        {/* End Suggested Users */}
       </div>
     </div>
   );

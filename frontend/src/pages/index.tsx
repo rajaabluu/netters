@@ -178,13 +178,13 @@ export default function HomePage() {
         <div className="flex gap-2 border-y  text-slate-800 font-medium text-sm items-center border-t-slate-200 mt-auto py-3  px-4">
           <label htmlFor="file" className="flex gap-2 items-center">
             <PhotoIcon className="size-6" />
-            <h1 className="">Tambahkan Gambar</h1>
+            <h1 className="">Add Image</h1>
           </label>
           <div
             onClick={() => createNewPost()}
             className="px-5 cursor-pointer max-sm:hidden ms-auto font-medium py-1.5 bg-black text-white rounded-full"
           >
-            {pendingNewPost ? <Loader className="size-6" /> : "Posting"}
+            {pendingNewPost ? <Loader className="size-6" /> : "Post"}
           </div>
           <input
             onChange={(e: ChangeEvent<HTMLInputElement>) => {

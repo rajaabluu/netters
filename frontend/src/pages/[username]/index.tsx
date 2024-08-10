@@ -52,13 +52,13 @@ export default function ProfilePage() {
     enabled: !!username,
     queryKey: ["profile", username],
     queryFn: async () => {
-      const res = await api.get(`/user/profile/${username}`);
+      const res = await api.get(`/user/${username}/profile`);
       if (res.status == 200) return res.data;
     },
   });
 
-  const { follow, following } = useFollow(profile?._id);
-  const { update, updating } = useEditProfile();
+  const { follow, following } = useFollow();
+  // const { update, updating } = useEditProfile();
 
   const isFollowing: boolean =
     !!profile && profile.followers.some((p: any) => p._id == auth._id);
@@ -86,15 +86,18 @@ export default function ProfilePage() {
       const ScrollT = window.matchMedia("(max-width: 640px)").matches
         ? 307
         : 340;
-      if (window.scrollY > ScrollT) {
-        if (!inView) setInView(true);
-      } else {
-        return setInView(false);
+      const scrollY = window.scrollY;
+
+      if (scrollY > ScrollT && !inView) {
+        setInView(true);
+      } else if (scrollY <= ScrollT && inView) {
+        setInView(false);
       }
     };
+
     window.addEventListener("scroll", scrollHandler);
     return () => window.removeEventListener("scroll", scrollHandler);
-  }, []);
+  }, [inView]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -127,7 +130,7 @@ export default function ProfilePage() {
       <div className="bg-white flex flex-col">
         <div
           className={clsx(
-            "px-4 py-3 left-0 top-0 right-0 sm:left-[5.55rem] max-h-16 sm:max-w-[600px] z-[1000] flex items-center gap-5",
+            "px-4 py-3 left-0 top-0 right-0 sm:left-[4.6rem] xl:left-[21.050rem] max-h-16 sm:max-w-[600px] z-[1000] flex items-center gap-5",
             inView &&
               "fixed bg-[rgba(255,255,255,0.8)] border border-t-0 border-slate-300 backdrop-blur-sm"
           )}
@@ -185,12 +188,12 @@ export default function ProfilePage() {
                       />
                       <h1 className="font-semibold">Edit Profile</h1>
                       <button className="bg-black px-4 rounded-full ms-auto py-1.5 text-sm text-white">
-                        Simpan
+                        Save
                       </button>
                     </div>
                     <div className="min-h-36 h-36 flex justify-center items-center bg-gray-100">
                       <label htmlFor="file" className="text-slate-500 text-sm">
-                        Tambahkan Banner
+                        Add Cover
                       </label>
                       <input type="file" id="file" hidden />
                     </div>
@@ -251,7 +254,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <button
-              onClick={() => follow()}
+              onClick={() => follow({ id: profile?._id })}
               className={clsx(
                 "px-5 py-1.5 h-fit  font-medium rounded-full text-sm ms-auto",
                 isFollowing
@@ -321,9 +324,15 @@ export default function ProfilePage() {
           {!!posts &&
             posts?.pages.map((page, index) => (
               <Fragment key={index}>
-                {page?.data.map((post: any, i: number) => (
-                  <Post post={post} key={i} user={auth} />
-                ))}
+                {page?.data.length > 0 ? (
+                  page?.data.map((post: any, i: number) => (
+                    <Post post={post} key={i} user={auth} />
+                  ))
+                ) : (
+                  <div className="flex mt-16 justify-center max-sm:text-sm text-slate-500">
+                    <h1>No Posts</h1>
+                  </div>
+                )}
               </Fragment>
             ))}
         </div>
