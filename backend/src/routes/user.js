@@ -7,7 +7,7 @@ const upload = require("../middleware/multer");
 
 const route = require("express").Router();
 
-route.get("/profile/:username", checkAuth, async (req, res) => {
+route.get("/:username/profile", checkAuth, async (req, res) => {
   const { username } = req.params;
   try {
     const user = await User.findOne({ username })
@@ -76,7 +76,7 @@ route.get("/suggested", checkAuth, async (req, res) => {
       },
     ]);
     const suggestedUser = users
-      .filter((user) => !followedByMe.following.includes(user.id))
+      .filter((user) => !followedByMe.following.includes(user._id))
       .slice(0, 4);
     suggestedUser.forEach((user) => (user.password = null));
 
@@ -97,7 +97,7 @@ route.put(
   async (req, res) => {
     const { name, email, username, currentPassword, newPassword, bio, link } =
       req.body;
-    let { profileImage, coverImage } = req.files;
+    let { profileImage, coverImage } = req?.files || {};
 
     try {
       let user = await User.findById(req.user._id);
