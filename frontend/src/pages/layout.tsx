@@ -25,7 +25,8 @@ import api from "../api/config";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth_context";
 import useModal from "../hooks/useModal";
-import { User } from "../types/user.type";
+import { User as UserType } from "../types/user.type";
+import { User } from "../components/user/user";
 
 export default function Layout() {
   const { auth, isLoading } = useAuth();
@@ -170,7 +171,9 @@ export default function Layout() {
             onClick={() => toggle()}
           >
             <img
-              src={auth.profileImage ?? "/img/default.png"}
+              src={
+                !!auth.profileImage ? auth.profileImage.url : "/img/default.png"
+              }
               className="rounded-full size-10 object-cover"
               alt=""
             />
@@ -218,33 +221,13 @@ export default function Layout() {
             </div>
             {loadingSuggestedUsers
               ? null
-              : suggestedUsers.map((user: User, i: number) => (
-                  <div className="flex items-center px-3 py-3 gap-3" key={i}>
-                    <div className=" rounded-full overflow-hidden size-10 min-h-10 min-w-10">
-                      <img
-                        src={
-                          !!user.profileImage
-                            ? user.profileImage.url
-                            : "/img/default.png"
-                        }
-                        alt=""
-                        className="object-cover size-full"
-                      />
-                    </div>
-                    <Link to={`/${user.username}`}>
-                      <h1 className="font-semibold">{user.name}</h1>
-                      <h5 className="text-sm text-slate-600">
-                        @{user.username}
-                      </h5>
-                    </Link>
-                    <button className="px-3 py-1.5 text-white text-sm bg-black rounded-full ms-auto font-medium">
-                      Follow
-                    </button>
-                  </div>
+              : suggestedUsers.map((user: UserType, i: number) => (
+                  <User key={i} user={user} />
                 ))}
           </div>
         </div>
         {/* End Suggested Users */}
+        {/* TODO : Remove This Component When no one Suggested user */}
       </div>
     </div>
   );

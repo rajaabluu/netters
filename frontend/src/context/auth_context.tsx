@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createContext, ReactNode, useContext } from "react";
 import api from "../api/config";
+import { User } from "../types/user.type";
 
 export const AuthContext = createContext<any>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { data: auth, isLoading } = useQuery({
+  const { data: auth, isLoading } = useQuery<User>({
     queryKey: ["auth"],
     queryFn: async () => {
       try {

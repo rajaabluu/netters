@@ -17,7 +17,8 @@ import Loader from "../../components/loader/loader";
 import useEditProfile from "../../hooks/useEditProfile";
 import useModal from "../../hooks/useModal";
 import ReactTextareaAutosize from "react-textarea-autosize";
-import { User } from "../../types/user.type";
+import { User as UserType } from "../../types/user.type";
+import { User, userIsFollowing } from "../../components/user/user";
 
 const forms = [
   { name: "username", label: "Username" },
@@ -29,12 +30,8 @@ const forms = [
 const defaultCredentials = {
   name: "",
   username: "",
-  profileImage: {
-    url: "",
-  },
-  coverImage: {
-    url: "",
-  },
+  profileImage: null,
+  coverImage: null,
   bio: "",
   link: "",
 };
@@ -46,9 +43,13 @@ export default function ProfilePage() {
     useState<typeof defaultCredentials>(defaultCredentials);
   const [type, setType] = useState<"post" | "likes">("post");
   const { toggle: toggleEditModal, show: editModalShow } = useModal();
+  const { toggle: toggleFollowersModal, show: followersModalShow } = useModal();
+  const { toggle: toggleFollowingModal, show: followingModalShow } = useModal();
   const { username } = useParams();
   const { auth } = useAuth();
-  const { data: profile, isLoading } = useQuery<User>({
+  const { follow, following } = useFollow();
+  const { update, updating } = useEditProfile(() => toggleEditModal());
+  const { data: profile, isLoading } = useQuery<UserType>({
     enabled: !!username,
     queryKey: ["profile", username],
     queryFn: async () => {
@@ -56,12 +57,6 @@ export default function ProfilePage() {
       if (res.status == 200) return res.data;
     },
   });
-
-  const { follow, following } = useFollow();
-  // const { update, updating } = useEditProfile();
-
-  const isFollowing: boolean =
-    !!profile && profile.followers.some((p: any) => p._id == auth._id);
 
   const { data: posts } = useInfiniteQuery({
     initialPageParam: 1,
@@ -110,12 +105,8 @@ export default function ProfilePage() {
     if (!!profile) {
       setCredentials({
         bio: profile.bio || "",
-        coverImage: {
-          url: profile.coverImage?.url || "",
-        },
-        profileImage: {
-          url: "",
-        },
+        coverImage: (profile.coverImage as any) || null,
+        profileImage: (profile.profileImage as any) || null,
         name: profile.name || "",
         username: profile.username || "",
         link: profile.link || "",
@@ -123,10 +114,242 @@ export default function ProfilePage() {
     }
   }, [profile]);
 
+  const getProfileImage = (auth: UserType) => {
+    if (!!auth.profileImage && !!auth.profileImage.url)
+      return auth.profileImage.url;
+    else return URL.createObjectURL(credentials.profileImage as any);
+  };
+
+  const getCoverImage = (auth: UserType) => {
+    if (!!auth.coverImage && !!auth.coverImage.url) return auth.coverImage.url;
+    else return URL.createObjectURL(credentials.coverImage as any);
+  };
+
+  useEffect(() => {
+    console.log(credentials);
+  }, [credentials]);
+
   if (isLoading) return null;
 
   return (
     <>
+      {/* Edit Modal */}
+      {editModalShow && (
+        <>
+          <div
+            onClick={toggleEditModal}
+            className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
+          ></div>
+          <div className="fixed z-[9999] sm:mx-auto sm:my-auto sm:h-fit top-0 left-0 bottom-0 sm:min-w-[20rem] right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
+            <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky backdrop-blur top-0 bg-[rgba(255,255,255,0.8)]">
+              <ArrowLeftIcon
+                onClick={toggleEditModal}
+                className="size-6 sm:hidden cursor-pointer"
+              />
+              <XMarkIcon
+                onClick={toggleEditModal}
+                className="size-6 max-sm:hidden cursor-pointer"
+              />
+              <h1 className="font-semibold text-lg">Edit Profile</h1>
+              {updating ? (
+                <Loader className="size-7 invert ms-auto"></Loader>
+              ) : (
+                <button
+                  onClick={async () => {
+                    await update(credentials as any);
+                  }}
+                  className="bg-black px-4 rounded-full ms-auto py-1.5 text-sm text-white"
+                >
+                  Save
+                </button>
+              )}
+            </div>
+            <div
+              style={{
+                backgroundImage: !!credentials.coverImage
+                  ? `url(${getCoverImage(auth)})`
+                  : " ",
+              }}
+              className="min-h-36 h-36 bg-cover bg-center flex justify-center items-center bg-gray-100 overflow-hidden"
+            >
+              <label
+                htmlFor="coverImage"
+                className={clsx(
+                  "text-sm",
+                  !!credentials.coverImage ? "text-white" : "text-slate-500 "
+                )}
+              >
+                Add Cover
+              </label>
+              <input
+                type="file"
+                id="coverImage"
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  setCredentials((c) => ({
+                    ...c,
+                    coverImage: !!e.target.files && (e.target.files[0] as any),
+                  }));
+                }}
+                hidden
+              />
+            </div>
+            <div
+              style={{
+                backgroundImage: !!credentials.profileImage
+                  ? `url(${getProfileImage(auth)})`
+                  : "",
+              }}
+              className="size-[4.6rem] bg-cover bg-center rounded-full bg-gray-200 ml-4 -mt-[2.5rem] flex items-center justify-center"
+            >
+              <label htmlFor="profileImage">
+                <CameraIcon
+                  className={clsx(
+                    "size-6 ",
+                    !!credentials.profileImage ? "fill-white" : "fill-gray-400"
+                  )}
+                />
+              </label>
+              <input
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  setCredentials((c) => ({
+                    ...c,
+                    profileImage:
+                      !!e.target.files && (e.target.files[0] as any),
+                  }));
+                }}
+                type="file"
+                hidden
+                name=""
+                id="profileImage"
+              />
+            </div>
+            <div className="flex flex-wrap items-stretch w-full sm:w-fit px-5 gap-4 mt-8 sm:py-6">
+              {forms.map((form, i) => {
+                return (
+                  <div
+                    key={i}
+                    className="flex flex-col w-full !h-auto flex-grow  "
+                  >
+                    <label
+                      htmlFor={form.name}
+                      className=" text-slate-600 text-sm sm:mb-1"
+                    >
+                      {form.label}
+                    </label>
+                    {form.name == "bio" ? (
+                      <ReactTextareaAutosize
+                        onChange={handleChange}
+                        id={form.name}
+                        value={
+                          credentials[
+                            form.name as keyof typeof defaultCredentials
+                          ] as any
+                        }
+                        className="resize-none sm:border sm:px-3 sm:py-2 sm:rounded-md  flex-grow min-h-24 focus:outline-none border-b-2 py-0.5 border-slate-300"
+                      ></ReactTextareaAutosize>
+                    ) : (
+                      <input
+                        onChange={handleChange}
+                        id={form.name}
+                        value={
+                          credentials[
+                            form.name as keyof typeof defaultCredentials
+                          ] as any
+                        }
+                        className="border-b-2 sm:border sm:px-3 sm:rounded-md  sm:py-2 py-1 flex-grow border-slate-300"
+                        type="text"
+                      ></input>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+      {/* End edit Modal */}
+      {/*  Followers Modal */}
+      {followersModalShow && (
+        <>
+          <div
+            onClick={toggleFollowersModal}
+            className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
+          ></div>
+          <div className="fixed z-[9999] sm:mx-auto sm:my-auto top-0 left-0 bottom-0 sm:min-w-[28rem] md:w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
+            <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
+              <ArrowLeftIcon
+                onClick={toggleFollowersModal}
+                className="size-6 sm:hidden cursor-pointer"
+              />
+              <XMarkIcon
+                onClick={toggleFollowersModal}
+                className="size-6 max-sm:hidden cursor-pointer"
+              />
+              <h1 className="font-semibold text-lg">Followers</h1>
+            </div>
+            <div className="flex flex-col">
+              {profile?.followers && profile.followers.length > 0 ? (
+                profile?.followers.map((user, i) => {
+                  return (
+                    <User
+                      className="!px-4 border-b border-b-slate-300"
+                      user={user}
+                      key={i}
+                    />
+                  );
+                })
+              ) : (
+                <div className="flex justify-center text-sm text-slate-500 mt-12">
+                  No Followers
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+      {/* End Followers Modal */}
+
+      {/* Following Modal */}
+      {followingModalShow && (
+        <>
+          <div
+            onClick={toggleFollowingModal}
+            className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
+          ></div>
+          <div className="fixed z-[9999] sm:mx-auto sm:my-auto top-0 left-0 bottom-0 sm:min-w-[28rem] md:min-w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
+            <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
+              <ArrowLeftIcon
+                onClick={toggleFollowingModal}
+                className="size-6 sm:hidden cursor-pointer"
+              />
+              <XMarkIcon
+                onClick={toggleFollowingModal}
+                className="size-6 max-sm:hidden cursor-pointer"
+              />
+              <h1 className="font-semibold text-lg">Following</h1>
+            </div>
+            <div className="flex flex-col">
+              {profile?.following && profile.following.length > 0 ? (
+                profile?.following.map((user, i) => {
+                  return (
+                    <User
+                      className="!px-4 border-b border-b-slate-300"
+                      user={user}
+                      key={i}
+                    />
+                  );
+                })
+              ) : (
+                <div className="flex justify-center text-sm text-slate-500 mt-12">
+                  No Following
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+      {/* End Following Modal */}
+
       <div className="bg-white flex flex-col">
         <div
           className={clsx(
@@ -151,10 +374,18 @@ export default function ProfilePage() {
         </div>
         <div
           className={clsx(
-            "w-full  bg-gray-300 !min-h-36 sm:!min-h-44",
+            "w-full  bg-gray-300 !min-h-36 max-h-36 sm:!min-h-44 sm:max-h-44 overflow-hidden",
             !inView && "-mt-[3.95rem] "
           )}
-        ></div>
+        >
+          {!!profile?.coverImage && (
+            <img
+              src={profile?.coverImage.url}
+              className="size-full h-36 sm:h-44 object-cover "
+              alt=""
+            />
+          )}
+        </div>
         <div className="flex py-3 px-4 pl-5">
           <div className="size-[4.6rem] border-2  border-white rounded-full overflow-hidden -mt-[2.6rem]">
             <img
@@ -169,82 +400,6 @@ export default function ProfilePage() {
           </div>
           {profile?._id == auth._id ? (
             <div className="relative ms-auto">
-              {/* Edit Modal */}
-              {editModalShow && (
-                <>
-                  <div
-                    onClick={toggleEditModal}
-                    className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
-                  ></div>
-                  <div className="fixed z-[9999] sm:mx-auto sm:my-auto sm:h-fit top-0 left-0 bottom-0 sm:min-w-[20rem] right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
-                    <div className="px-6 sm:px-4 py-3 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,0.8)]">
-                      <ArrowLeftIcon
-                        onClick={toggleEditModal}
-                        className="size-6 sm:hidden cursor-pointer"
-                      />
-                      <XMarkIcon
-                        onClick={toggleEditModal}
-                        className="size-6 max-sm:hidden cursor-pointer"
-                      />
-                      <h1 className="font-semibold">Edit Profile</h1>
-                      <button className="bg-black px-4 rounded-full ms-auto py-1.5 text-sm text-white">
-                        Save
-                      </button>
-                    </div>
-                    <div className="min-h-36 h-36 flex justify-center items-center bg-gray-100">
-                      <label htmlFor="file" className="text-slate-500 text-sm">
-                        Add Cover
-                      </label>
-                      <input type="file" id="file" hidden />
-                    </div>
-                    <div className="size-[4.6rem] rounded-full bg-gray-200 ml-4 -mt-[2.5rem] flex items-center justify-center">
-                      <CameraIcon className="size-6 fill-gray-400" />
-                    </div>
-                    <div className="flex flex-wrap items-stretch w-full sm:w-fit px-5 gap-4 mt-8 sm:py-6">
-                      {forms.map((form, i) => {
-                        return (
-                          <div
-                            key={i}
-                            className="flex flex-col w-full !h-auto flex-grow  "
-                          >
-                            <label
-                              htmlFor={form.name}
-                              className=" text-slate-600 text-sm sm:mb-1"
-                            >
-                              {form.label}
-                            </label>
-                            {form.name == "bio" ? (
-                              <ReactTextareaAutosize
-                                onChange={handleChange}
-                                id={form.name}
-                                value={
-                                  credentials[
-                                    form.name as keyof typeof defaultCredentials
-                                  ] as any
-                                }
-                                className="resize-none sm:border sm:px-3 sm:py-2 sm:rounded-md  flex-grow min-h-24 focus:outline-none border-b-2 py-0.5 border-slate-300"
-                              ></ReactTextareaAutosize>
-                            ) : (
-                              <input
-                                onChange={handleChange}
-                                id={form.name}
-                                value={
-                                  credentials[
-                                    form.name as keyof typeof defaultCredentials
-                                  ] as any
-                                }
-                                className="border-b-2 sm:border sm:px-3 sm:rounded-md  sm:py-2 py-1 flex-grow border-slate-300"
-                                type="text"
-                              ></input>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>
-              )}
-              {/* End edit Modal */}
               <button
                 onClick={() => toggleEditModal()}
                 className="px-5 py-1.5 h-fit bg-black text-white font-medium rounded-full text-sm "
@@ -257,14 +412,19 @@ export default function ProfilePage() {
               onClick={() => follow({ id: profile?._id })}
               className={clsx(
                 "px-5 py-1.5 h-fit  font-medium rounded-full text-sm ms-auto",
-                isFollowing
+                userIsFollowing(auth, profile)
                   ? "bg-white border border-slate-400 text-neutral-700"
                   : "bg-black text-white"
               )}
             >
               {following ? (
-                <Loader className={clsx("size-5", isFollowing && "invert")} />
-              ) : isFollowing ? (
+                <Loader
+                  className={clsx(
+                    "size-5",
+                    userIsFollowing(auth, profile) && "invert"
+                  )}
+                />
+              ) : userIsFollowing(auth, profile) ? (
                 "Unfollow"
               ) : (
                 "Follow"
@@ -286,11 +446,11 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex gap-5 mt-3.5 font-medium text-[0.9rem] items-center">
-            <span>
+            <span className="cursor-pointer" onClick={toggleFollowingModal}>
               {profile?.following.length}{" "}
               <span className="text-slate-600 font-normal">Following</span>
             </span>
-            <span>
+            <span className="cursor-pointer" onClick={toggleFollowersModal}>
               {profile?.followers.length}{" "}
               <span className="text-slate-600 font-normal">Followers</span>
             </span>

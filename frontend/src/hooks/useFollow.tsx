@@ -11,7 +11,7 @@ export default function useFollow() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["suggested-users"] }),
-        queryClient.invalidateQueries({ queryKey: ["profile"] }),
+        queryClient.invalidateQueries({ queryKey: ["auth"] }),
       ]);
     },
   });

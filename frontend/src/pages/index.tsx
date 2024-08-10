@@ -120,16 +120,19 @@ export default function HomePage() {
             onClick={() => toggle()}
             className="size-7 cursor-pointer"
           />
-          <div
+          <button
+            disabled={newPost.images.length == 0 || newPost.text.length == 0}
             onClick={() => createNewPost()}
             className="px-5 font-medium py-1.5 max-sm:text-sm bg-black text-white rounded-full"
           >
-            {pendingNewPost ? <Loader className="size-6" /> : "Posting"}
-          </div>
+            {pendingNewPost ? <Loader className="size-6" /> : "Post"}
+          </button>
         </div>
         <div className="flex mt-2 px-4 gap-4 sm:min-h-32 sm:py-3">
           <img
-            src={auth.profileImage ?? "/img/default.png"}
+            src={
+              !!auth.profileImage ? auth.profileImage.url : "/img/default.png"
+            }
             className="size-11 object-cover rounded-full"
             alt=""
           />
@@ -180,12 +183,13 @@ export default function HomePage() {
             <PhotoIcon className="size-6" />
             <h1 className="">Add Image</h1>
           </label>
-          <div
+          <button
+            disabled={newPost.images.length == 0 || newPost.text.length == 0}
             onClick={() => createNewPost()}
             className="px-5 cursor-pointer max-sm:hidden ms-auto font-medium py-1.5 bg-black text-white rounded-full"
           >
             {pendingNewPost ? <Loader className="size-6" /> : "Post"}
-          </div>
+          </button>
           <input
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               if (e.target.files) {
