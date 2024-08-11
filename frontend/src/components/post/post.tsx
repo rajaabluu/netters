@@ -55,9 +55,14 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
   });
 
   const isFollowing = user.following.some((u: any) => u._id == post.user._id);
+  const getPostUrl = (post: PostType) =>
+    `/${post.user.username}/post/${post._id}`;
 
   return (
-    <div className="px-4 border-b border-b-slate-300 flex pt-4 pb-3">
+    <Link
+      to={getPostUrl(post)}
+      className="px-4 border-b border-b-slate-300 flex pt-4 pb-3"
+    >
       <div className="w-max">
         <img
           className="min-w-10 min-h-10 size-10 sm:size-11 rounded-full object-cover"
@@ -97,7 +102,12 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
             {likeMutation.isPending ? (
               <Loader className="size-5 invert" />
             ) : (
-              <div onClick={() => likeMutation.mutate({ postId: post._id })}>
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  likeMutation.mutate({ postId: post._id });
+                }}
+              >
                 {post.likes.some((like: any) => like._id == user._id) ? (
                   <HeartSolidIcon className="size-5 cursor-pointer fill-black" />
                 ) : (
@@ -111,7 +121,13 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
       </div>
 
       <div className="flex flex-col justify-between text-slate-400">
-        <div className="relative" onClick={toggle}>
+        <div
+          className="relative"
+          onClick={(e) => {
+            e.preventDefault();
+            toggle();
+          }}
+        >
           <EllipsisHorizontalIcon className="size-5 text-slate-600" />
           <Popover open={show} onClose={close}>
             {user._id !== post.user._id ? (
@@ -138,6 +154,6 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
           <BookmarkIcon className="size-5" />
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
