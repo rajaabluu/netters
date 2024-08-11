@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { useAuth } from "../context/auth_context";
 import useModal from "../hooks/useModal";
 import { Post as PostType } from "../types/post.type";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 
 export default function HomePage() {
   const [type, setType] = useState<"all" | "following">("all");
@@ -147,36 +149,43 @@ export default function HomePage() {
           ></ReactTextareaAutosize>
         </div>
         {newPost.images.length > 0 && (
-          <div className="flex gap-2.5 pl-6 sm:pl-16 pr-8 pb-8 max-ms:pt-12">
+          <Swiper
+            slidesPerView={"auto"}
+            autoplay={false}
+            spaceBetween={15}
+            className=" gap-4 pl-6 sm:pl-16 pr-8 pb-8 max-sm:pt-12 mySwiper max-w-screen !mx-0"
+          >
             {newPost.images.map((image, index) => {
               return (
-                <div
-                  key={index}
-                  className={clsx(
-                    newPost.images.length > 1 ? "w-36" : "w-4/5",
-                    "aspect-[9/12] relative"
-                  )}
-                >
+                <SwiperSlide className="!w-fit">
                   <div
-                    onClick={() =>
-                      setNewPost((post) => ({
-                        ...post,
-                        images: post.images.filter((_, i) => i !== index),
-                      }))
-                    }
-                    className="bg-white border border-slate-300 rounded-full absolute -top-2 -right-2 p-1"
+                    key={index}
+                    className={clsx(
+                      newPost.images.length > 1 ? "w-28" : "w-4/5",
+                      "aspect-[9/10] relative max-sm:shadow-md"
+                    )}
                   >
-                    <XMarkIcon className="size-4" />
+                    <div
+                      onClick={() =>
+                        setNewPost((post) => ({
+                          ...post,
+                          images: post.images.filter((_, i) => i !== index),
+                        }))
+                      }
+                      className="bg-white border border-slate-300 rounded-full absolute -top-2 -right-2 p-1"
+                    >
+                      <XMarkIcon className="size-4" />
+                    </div>
+                    <img
+                      className={clsx("object-cover size-full", "rounded-md")}
+                      src={URL.createObjectURL(image)}
+                      alt=""
+                    />
                   </div>
-                  <img
-                    className={clsx("object-cover size-full", "rounded-md")}
-                    src={URL.createObjectURL(image)}
-                    alt=""
-                  />
-                </div>
+                </SwiperSlide>
               );
             })}
-          </div>
+          </Swiper>
         )}
         <div className="flex gap-2 border-y  text-slate-800 font-medium text-sm items-center border-t-slate-200 mt-auto py-3  px-4">
           <label htmlFor="file" className="flex gap-2 items-center">

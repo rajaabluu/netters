@@ -64,6 +64,7 @@ export default function Layout() {
   });
 
   const pages = ["/notification"];
+  const hiddenLayoutPages = ["/:username", "/:username/post/:id"];
   const hiddenTopbarPages = ["/notification"];
 
   const topbarHidden = hiddenTopbarPages.some((s) =>
@@ -72,7 +73,9 @@ export default function Layout() {
 
   const includePage = pages.some((s) => location.pathname.includes(s));
 
-  const match = !includePage && matchPath("/:username", location.pathname);
+  const match =
+    !includePage &&
+    hiddenLayoutPages.some((path) => matchPath(path, location.pathname));
 
   const menu: {
     label: string;

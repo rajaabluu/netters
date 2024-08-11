@@ -11,6 +11,7 @@ import { AuthProvider } from "./context/auth_context";
 import PrivateRoute from "./components/routes/private_route";
 import GuestRoute from "./components/routes/guest_route";
 import ProfilePage from "./pages/[username]";
+import PostDetailPage from "./pages/[username]/post/[id]";
 
 function App() {
   const queryClient = new QueryClient();
@@ -29,6 +30,10 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/notification" element={<NotificationPage />} />
                 <Route path="/:username" element={<ProfilePage />} />
+                <Route
+                  path="/:username/post/:id"
+                  element={<PostDetailPage />}
+                />
               </Route>
             </Route>
             {/* End Private Route */}

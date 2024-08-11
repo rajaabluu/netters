@@ -7,6 +7,7 @@ export interface Post {
   text: string;
   images: UserImage[] | null;
   likes: UserPreview[];
+  comments: UserPreview[];
   createdAt: string;
   commentsCount?: number;
 }
