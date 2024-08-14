@@ -25,8 +25,8 @@ import api from "../api/config";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth_context";
 import useModal from "../hooks/useModal";
-import { User as UserType } from "../types/user.type";
-import { User } from "../components/user/user";
+// import { User as UserType } from "../types/user.type";
+// import { User } from "../components/user/user";
 
 export default function Layout() {
   const { auth, isLoading } = useAuth();
@@ -35,13 +35,13 @@ export default function Layout() {
   const { show, toggle } = useModal();
   const queryClient = useQueryClient();
 
-  const { data: suggestedUsers, isLoading: loadingSuggestedUsers } = useQuery({
-    queryKey: ["suggested-users"],
-    queryFn: async () => {
-      const res = await api.get("user/suggested");
-      if (res.status == 200) return res.data;
-    },
-  });
+  // const { data: suggestedUsers, isLoading: loadingSuggestedUsers } = useQuery({
+  //   queryKey: ["suggested-users"],
+  //   queryFn: async () => {
+  //     const res = await api.get("user/suggested");
+  //     if (res.status == 200) return res.data;
+  //   },
+  // });
 
   const { mutate: logout } = useMutation({
     mutationFn: async () => {
@@ -215,7 +215,7 @@ export default function Layout() {
           <Outlet />
         </div>
         {/* Suggested Users */}
-        <div className="max-lg:hidden py-4 px-4 flex-grow sticky top-0 h-fit max-h-screen max-w-[25rem]">
+        {/* <div className="max-lg:hidden py-4 px-4 flex-grow sticky top-0 h-fit max-h-screen max-w-[25rem]">
           <div className="flex h-fit flex-col border border-slate-300 rounded-lg px-2 py-2 pb-4">
             <div>
               <h1 className="text-xl mx-3 font-bold py-2 text-slate-800">
@@ -228,7 +228,7 @@ export default function Layout() {
                   <User key={i} user={user} />
                 ))}
           </div>
-        </div>
+        </div> */}
         {/* End Suggested Users */}
         {/* TODO : Remove This Component When no one Suggested user */}
       </div>

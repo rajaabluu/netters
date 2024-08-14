@@ -10,5 +10,5 @@ export default function PrivateRoute() {
         <Loader className="size-9" />
       </div>
     );
-  return !auth ? <Navigate to={"/auth/login"} /> : <Outlet />;
+  return !!!auth ? <Navigate to={"/auth/login"} /> : <Outlet />;
 }
