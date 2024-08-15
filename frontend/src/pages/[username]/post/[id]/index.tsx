@@ -62,7 +62,7 @@ export default function PostDetailPage() {
         {/* Comment field */}
         <div
           className={clsx(
-            "max-sm:fixed left-0 right-0 bottom-0 max-sm:border-t flex sm:border-b max-sm:flex-col pt-1.5 border-slate-300 sm:my-4 sm:py-2  sm:items-end",
+            "max-sm:fixed left-0 right-0 bottom-0 max-sm:border-t flex sm:border-b flex-col pt-1.5 border-slate-300 sm:my-4 sm:py-2  sm:items-end",
             isModalFullscreen
               ? "!top-0  bg-white "
               : "items-center mt-3 mb-2 max-sm:px-4 ",
@@ -94,16 +94,16 @@ export default function PostDetailPage() {
                 </div>
                 <ReactTextareaAutosize
                   placeholder="Post your reply"
-                  className="focus:outline-none text-slate-500 resize-none flex-grow mt-1"
+                  className="focus:outline-none text-slate-500 resize-none flex-grow mt-1 "
                 ></ReactTextareaAutosize>
               </div>
             </>
           )}
-          <div className={clsx("flex w-full items-center")}>
+          <div className={clsx("flex w-full items-center sm:py-2")}>
             <ReactTextareaAutosize
               onClick={() => setCommenting(true)}
               className={clsx(
-                "max-sm:py-1 resize-none sm:flex-growpr-5 focus:outline-none",
+                "max-sm:py-1 resize-none sm:flex-grow pr-2 sm:pr-5 focus:outline-none",
                 isModalFullscreen ? "max-sm:hidden" : "flex-grow",
                 commenting ? "max-sm:py-2  border-none " : ""
               )}
@@ -130,7 +130,7 @@ export default function PostDetailPage() {
           {commenting && (
             <div
               className={clsx(
-                "flex w-full sm:hidden py-2 border-t border-t-slate-300 mt-auto ",
+                "flex w-full  py-2 border-t border-t-slate-300 mt-auto sm:pt-4",
                 isModalFullscreen && "px-4"
               )}
             >

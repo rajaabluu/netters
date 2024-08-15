@@ -10,22 +10,25 @@ import moment from "moment";
 import Loader from "../loader/loader";
 import api from "../../api/config";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, matchPath, useLocation } from "react-router-dom";
+import { Link, matchPath, useLocation, useNavigate } from "react-router-dom";
 import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid";
 import Popover from "../menu/popover";
 import { toast } from "sonner";
 import useModal from "../../hooks/useModal";
 import { Post as PostType } from "../../types/post.type";
+import useFollow from "../../hooks/useFollow";
 
 export default function Post({ post, user }: { post: PostType; user: any }) {
   const { show, toggle, close } = useModal();
   const l = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathnameMatch = matchPath("/:username", l.pathname);
   const handleLike = async ({ postId }: { postId: string | number }) => {
     const res = await api.post(`/post/${postId}/like`);
     if (res.status == 200) return res.data;
   };
+  const { follow, following } = useFollow();
   const handleDelete = async () => {
     try {
       const res = await api.delete(`/post/${post._id}`);
@@ -59,8 +62,8 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
     `/${post.user.username}/post/${post._id}`;
 
   return (
-    <Link
-      to={getPostUrl(post)}
+    <div
+      onClick={() => navigate(getPostUrl(post))}
       className="px-4 border-b border-b-slate-300 flex pt-4 pb-3"
     >
       <div className="w-max">
@@ -104,7 +107,7 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
             ) : (
               <div
                 onClick={(e) => {
-                  e.preventDefault();
+                  e.stopPropagation();
                   likeMutation.mutate({ postId: post._id });
                 }}
               >
@@ -124,15 +127,24 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
         <div
           className="relative"
           onClick={(e) => {
-            e.preventDefault();
+            e.stopPropagation();
             toggle();
           }}
         >
           <EllipsisHorizontalIcon className="size-5 text-slate-600" />
           <Popover open={show} onClose={close}>
             {user._id !== post.user._id ? (
-              <div className="w-max">
-                {isFollowing ? "Unfollow" : "Follow"} @{post.user.username}
+              <div
+                onClick={() => follow({ id: post.user._id })}
+                className="w-max flex justify-center"
+              >
+                {following ? (
+                  <Loader className="size-4 invert" />
+                ) : isFollowing ? (
+                  `Unfollow @${post.user.username}`
+                ) : (
+                  `Follow @${post.user.username}`
+                )}
               </div>
             ) : (
               <div
@@ -154,6 +166,6 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
           <BookmarkIcon className="size-5" />
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
