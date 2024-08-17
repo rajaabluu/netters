@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import useModal from "../../hooks/useModal";
 import { Post as PostType } from "../../types/post.type";
 import useFollow from "../../hooks/useFollow";
+import useLike from "../../hooks/useLike";
 
 export default function Post({ post, user }: { post: PostType; user: any }) {
   const { show, toggle, close } = useModal();
@@ -24,10 +25,7 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathnameMatch = matchPath("/:username", l.pathname);
-  const handleLike = async ({ postId }: { postId: string | number }) => {
-    const res = await api.post(`/post/${postId}/like`);
-    if (res.status == 200) return res.data;
-  };
+  const { like, liking } = useLike();
   const { follow, following } = useFollow();
   const handleDelete = async () => {
     try {
@@ -37,12 +35,6 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
       throw new Error(err);
     }
   };
-  const likeMutation = useMutation({
-    mutationFn: handleLike,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-  });
 
   const deleteMutation = useMutation({
     mutationFn: handleDelete,
@@ -81,7 +73,11 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
         {/* User name wrapper */}
         <div className="w-full overflow-hidden">
           <div className="w-max flex gap-1.5 items-center">
-            <Link to={`/${post.user.username}`} className="flex gap-1.5 ">
+            <Link
+              onClick={(e) => e.stopPropagation()}
+              to={`/${post.user.username}`}
+              className="flex gap-1.5 "
+            >
               <h1 className="font-medium">{post.user.name}</h1>
               <h6 className="text-slate-500">@{post.user.username}</h6>
             </Link>
@@ -102,16 +98,23 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
             <p>{post.commentsCount}</p>
           </div>
           <div className="flex gap-1 items-center">
-            {likeMutation.isPending ? (
+            {liking ? (
               <Loader className="size-5 invert" />
             ) : (
               <div
                 onClick={(e) => {
                   e.stopPropagation();
-                  likeMutation.mutate({ postId: post._id });
+                  like(post._id, {
+                    onSuccess: async () => {
+                      await queryClient.refetchQueries({
+                        queryKey: ["posts"],
+                      });
+                    },
+                  });
                 }}
               >
-                {post.likes.some((like: any) => like._id == user._id) ? (
+                {!liking &&
+                post.likes.some((like: any) => like._id == user._id) ? (
                   <HeartSolidIcon className="size-5 cursor-pointer fill-black" />
                 ) : (
                   <HeartIcon className="size-5 cursor-pointer" />

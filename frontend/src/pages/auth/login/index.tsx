@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Input from "../../../components/forms/input";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,6 @@ import { toast } from "sonner";
 
 export default function LoginPage() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const forms = [
     { label: "Username", name: "username", type: "text" },
     { label: "Password", name: "password", type: "password" },
@@ -37,7 +36,6 @@ export default function LoginPage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["auth"] });
-      navigate("/");
     },
   });
 
@@ -94,7 +92,7 @@ export default function LoginPage() {
           </button>
           <p className="text-slate-600">
             Don't have a account?{" "}
-            <Link to={"/auth/register"} className="text-blue-500 font-medium">
+            <Link to={"/auth/signup"} className="text-blue-500 font-medium">
               Register Now
             </Link>{" "}
           </p>

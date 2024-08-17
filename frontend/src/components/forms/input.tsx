@@ -1,9 +1,10 @@
 import clsx from "clsx";
-import { ReactNode } from "react";
+import { KeyboardEvent, ReactNode } from "react";
 
 export default function Input({
   onChange,
   placeholder,
+  onKeyDown,
   name,
   value,
   className,
@@ -11,6 +12,7 @@ export default function Input({
   type,
 }: {
   onChange: (e: any) => void;
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
   placeholder: string;
   name: string;
   className?: string;
@@ -21,6 +23,7 @@ export default function Input({
   return (
     <div className="relative">
       <input
+        onKeyDown={onKeyDown}
         onChange={onChange}
         placeholder={placeholder}
         name={name}

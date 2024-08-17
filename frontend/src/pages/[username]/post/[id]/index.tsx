@@ -1,11 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../../../api/config";
 import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
 import { Post } from "../../../../types/post.type";
 import ImageWrapper from "../../../../components/post/image_wrapper";
 import moment from "moment";
-import { CameraIcon } from "@heroicons/react/24/outline";
+import {
+  CameraIcon,
+  ChatBubbleOvalLeftIcon,
+  HeartIcon,
+} from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { ChangeEvent, useEffect, useState } from "react";
 import useModal from "../../../../hooks/useModal";
 import clsx from "clsx";
@@ -14,10 +19,14 @@ import ReactTextareaAutosize from "react-textarea-autosize";
 import { User } from "../../../../types/user.type";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { Swiper, SwiperSlide } from "swiper/react";
+import Loader from "../../../../components/loader/loader";
+import useLike from "../../../../hooks/useLike";
 
 export default function PostDetailPage() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
   const { auth }: { auth: User } = useAuth();
+  const { like, liking } = useLike();
   const navigate = useNavigate();
   const [commenting, setCommenting] = useState(false);
   const [comment, setComment] = useState({
@@ -67,13 +76,43 @@ export default function PostDetailPage() {
           <p className="sm:text-lg">{post.text}</p>
           {!!post.images && <ImageWrapper images={post.images} />}
         </div>
-        <div className="text-slate-600 text-sm max-sm:mt-4 mt-1 py-2 border-b border-slate-300">
+        <div className="text-slate-600 text-sm max-sm:mt-2 mt-1 py-2 pb-1">
           {moment(post.createdAt).format("h:mm • MMMM D YYYY ")}
+        </div>
+        <div className="py-2 border-b border-b-slate-300 text-slate-400 flex gap-12 items-center">
+          <div className="flex gap-1 items-center">
+            <ChatBubbleOvalLeftIcon className="size-[1.15rem] mb-[0.100rem]" />
+            <p>{post.comments.length}</p>
+          </div>
+          <div className="flex gap-1 items-center">
+            {liking ? (
+              <Loader className="size-5 invert" />
+            ) : (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  like(post._id, {
+                    onSuccess: async () =>
+                      await queryClient.invalidateQueries({
+                        queryKey: ["post", id],
+                      }),
+                  });
+                }}
+              >
+                {post.likes.some((like: any) => like._id == auth._id) ? (
+                  <HeartSolidIcon className="size-5 cursor-pointer fill-black" />
+                ) : (
+                  <HeartIcon className="size-5 cursor-pointer" />
+                )}
+              </div>
+            )}
+            <p>{post.likes.length}</p>
+          </div>
         </div>
         {/* Comment field */}
         <div
           className={clsx(
-            "max-sm:fixed left-0 right-0 bottom-0 max-sm:border-t flex sm:border-b flex-col sm:pt-1.5 border-slate-300 sm:my-4 sm:py-2 sm:items-start bg-white",
+            "max-sm:fixed left-0 right-0 bottom-0 max-sm:border-t flex sm:border-b flex-col  border-slate-300 sm:my-4 sm:pt-2 sm:items-start bg-white",
             isModalFullscreen
               ? "!top-0  bg-white "
               : "items-center mt-3 max-sm:px-2",
@@ -115,7 +154,7 @@ export default function PostDetailPage() {
           )}
           <div
             className={clsx(
-              "flex w-full items-center sm:py-2 sm:items-end",
+              "flex w-full items-center sm:py-3 sm:items-end",
               !commenting && !isModalFullscreen
                 ? "max-sm:border-b border-slate-300 max-sm:pb-2"
                 : "max-sm:pb-0",
@@ -147,7 +186,7 @@ export default function PostDetailPage() {
             <ReactTextareaAutosize
               onClick={() => setCommenting(true)}
               className={clsx(
-                "max-sm:py-1 resize-none sm:flex-grow pr-2 sm:pl-1  sm:pb-2 max-sm:px-0.5 sm:pr-5 focus:outline-none",
+                "max-sm:py-1 resize-none sm:flex-grow pr-2 sm:pl-3  sm:pb-2 max-sm:px-0.5 sm:pr-5 focus:outline-none",
                 isModalFullscreen ? "max-sm:w-full max-sm:!pt-0" : "flex-grow ",
                 commenting && !isModalFullscreen
                   ? "max-sm:py-2 border-none "
@@ -183,9 +222,8 @@ export default function PostDetailPage() {
               >
                 {comment.images.map((image, index) => {
                   return (
-                    <SwiperSlide className="!w-fit">
+                    <SwiperSlide key={index} className="!w-fit">
                       <div
-                        key={index}
                         className={clsx(
                           comment.images.length > 1 ? "w-28" : "w-4/5",
                           "aspect-[9/10] relative max-sm:shadow-md"
@@ -222,7 +260,7 @@ export default function PostDetailPage() {
           {commenting && (
             <div
               className={clsx(
-                "flex w-full  py-2 border-t border-t-slate-300 mt-auto sm:pt-4",
+                "flex w-full  py-2 border-t border-t-slate-300 mt-auto sm:py-3 sm:sticky sm:bottom-0 sm:z-[3] bg-white",
                 isModalFullscreen && "max-sm:px-4"
               )}
             >

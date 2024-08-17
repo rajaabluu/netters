@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import Input from "../../../components/forms/input";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/20/solid";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../api/config";
 import Loader from "../../../components/loader/loader";
+import { Link } from "react-router-dom";
 
 export default function SignUpPage() {
+  const queryClient = useQueryClient();
   const forms = [
     { label: "Name", name: "name", type: "text" },
     { label: "Username", name: "username", type: "text" },
@@ -24,7 +26,7 @@ export default function SignUpPage() {
 
   const [hidePassword, setHidePassword] = useState(true);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setCredentials((c) => ({ ...c, [id]: value }));
   };
@@ -40,7 +42,9 @@ export default function SignUpPage() {
 
   const { mutate: signUp, isPending } = useMutation({
     mutationFn: handleSignUp,
-    onSuccess: () => {},
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
+    },
     onError: (err: any) => {
       if (err.response.status == 422)
         setValidationErrors(err.response.data.errors);
@@ -69,6 +73,11 @@ export default function SignUpPage() {
         >
           {forms.map((form, i) => (
             <Input
+              {...(form.name == "username" && {
+                onKeyDown: (e) => {
+                  if (e.key == " ") e.preventDefault();
+                },
+              })}
               name={form.name}
               value={credentials[form.name]}
               type={
@@ -106,6 +115,12 @@ export default function SignUpPage() {
           <button className="py-2.5 px-5 bg-[#18181B] rounded-md text-white mt-8 flex justify-center">
             {isPending ? <Loader className="size-6" /> : "Sign Up"}
           </button>
+          <p className="text-slate-600">
+            Already have a account?{" "}
+            <Link className="text-blue-500 font-medium" to={"/auth/login"}>
+              Sign in
+            </Link>
+          </p>
         </form>
       </div>
     </div>

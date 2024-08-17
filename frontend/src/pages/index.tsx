@@ -123,7 +123,7 @@ export default function HomePage() {
             className="size-7 cursor-pointer"
           />
           <button
-            disabled={newPost.images.length == 0 || newPost.text.length == 0}
+            disabled={newPost.images.length == 0 && newPost.text.length == 0}
             onClick={() => createNewPost()}
             className="px-5 font-medium py-1.5 max-sm:text-sm bg-black text-white rounded-full"
           >
@@ -135,7 +135,7 @@ export default function HomePage() {
             src={
               !!auth.profileImage ? auth.profileImage.url : "/img/default.png"
             }
-            className="size-11 object-cover rounded-full"
+            className="size-9 object-cover rounded-full"
             alt=""
           />
           <ReactTextareaAutosize
@@ -193,7 +193,7 @@ export default function HomePage() {
             <h1 className="">Add Image</h1>
           </label>
           <button
-            disabled={newPost.images.length == 0 || newPost.text.length == 0}
+            disabled={newPost.images.length == 0 && newPost.text.length == 0}
             onClick={() => createNewPost()}
             className="px-5 cursor-pointer max-sm:hidden ms-auto font-medium py-1.5 bg-black text-white rounded-full"
           >
