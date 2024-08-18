@@ -231,8 +231,7 @@ route.get("/:id", checkAuth, async (req, res) => {
     const post = await Post.findById(req.params.id)
       .populate("user", "name username profileImage")
       .populate("likes", "name username profileImage")
-      .populate("comments.from", "name username profileImage")
-      .populate("comments.to", "name username profileImage");
+      .populate("comments.user", "name username profileImage");
     return res.status(200).json(post);
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -289,8 +288,7 @@ route.post(
       const post = await Post.findById(req.params.id);
       if (!post) return res.status(404).json({ message: "Post Not Found" });
       post.comments.push({
-        from: req.user._id,
-        to: req.body.to,
+        user: req.user._id,
         text: req.body.text,
         images: images,
       });

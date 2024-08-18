@@ -12,11 +12,13 @@ const schema = new mongoose.Schema(
     likes: [{ type: mongoose.SchemaTypes.ObjectId, ref: "user" }],
     comments: [
       {
-        image: {
-          type: {
-            url: String,
-            publicId: String,
-          },
+        images: {
+          type: [
+            {
+              url: String,
+              publicId: String,
+            },
+          ],
           default: null,
         },
         text: {
@@ -24,12 +26,7 @@ const schema = new mongoose.Schema(
           required: true,
           trim: true,
         },
-        from: {
-          type: mongoose.SchemaTypes.ObjectId,
-          required: true,
-          ref: "user",
-        },
-        to: {
+        user: {
           type: mongoose.SchemaTypes.ObjectId,
           required: true,
           ref: "user",
