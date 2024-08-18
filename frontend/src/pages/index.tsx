@@ -45,7 +45,7 @@ export default function HomePage() {
       }
     },
     getNextPageParam: (lastPage) => lastPage?.nextPage,
-    staleTime: 1000 * 60 * 1,
+    staleTime: 1000 * 60,
   });
 
   const { mutate: createNewPost, isPending: pendingNewPost } = useMutation({
@@ -135,7 +135,7 @@ export default function HomePage() {
             src={
               !!auth.profileImage ? auth.profileImage.url : "/img/default.png"
             }
-            className="size-9 object-cover rounded-full"
+            className="size-9 sm:size-10 object-cover rounded-full"
             alt=""
           />
           <ReactTextareaAutosize
@@ -144,8 +144,8 @@ export default function HomePage() {
             onChange={(e) => {
               setNewPost((post) => ({ ...post, text: e.target.value }));
             }}
-            placeholder="Ketik sesuatu disini..."
-            className="w-full focus:outline-none resize-none"
+            placeholder="Whats happened? ..."
+            className="w-full focus:outline-none resize-none mt-1"
           ></ReactTextareaAutosize>
         </div>
         {newPost.images.length > 0 && (
@@ -157,9 +157,8 @@ export default function HomePage() {
           >
             {newPost.images.map((image, index) => {
               return (
-                <SwiperSlide className="!w-fit">
+                <SwiperSlide key={index} className="!w-fit">
                   <div
-                    key={index}
                     className={clsx(
                       newPost.images.length > 1 ? "w-28" : "w-4/5",
                       "aspect-[9/10] relative max-sm:shadow-md"
@@ -197,7 +196,7 @@ export default function HomePage() {
             onClick={() => createNewPost()}
             className="px-5 cursor-pointer max-sm:hidden ms-auto font-medium py-1.5 bg-black text-white rounded-full"
           >
-            {pendingNewPost ? <Loader className="size-6" /> : "Post"}
+            {pendingNewPost ? <Loader className="size-5" /> : "Post"}
           </button>
           <input
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -233,8 +232,8 @@ export default function HomePage() {
                   <Post key={i} post={post} user={auth} />
                 ))
               ) : (
-                <div className="flex justify-center mt-12">
-                  <h1>Tidak ada Postingan</h1>
+                <div className="flex justify-center mt-12 text-sm text-slate-600">
+                  <h1>No Posts</h1>
                 </div>
               )}
             </Fragment>

@@ -45,7 +45,7 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
         }));
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
 
-      toast.success("Post Berhasil dihapus");
+      toast.info("Post deleted");
     },
   });
 
@@ -56,11 +56,11 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
   return (
     <div
       onClick={() => navigate(getPostUrl(post))}
-      className="px-4 border-b border-b-slate-300 flex pt-4 pb-3"
+      className="px-4 border-b border-b-slate-300 flex pt-4 pb-3 max-sm:w-screen"
     >
       <div className="w-max">
         <img
-          className="min-w-10 min-h-10 size-10 sm:size-11 rounded-full object-cover"
+          className="min-w-9 min-h-9 size-9 sm:size-10 rounded-full object-cover"
           src={
             post.user.profileImage !== null
               ? post.user.profileImage.url
@@ -78,15 +78,19 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
               to={`/${post.user.username}`}
               className="flex gap-1.5 "
             >
-              <h1 className="font-medium">{post.user.name}</h1>
-              <h6 className="text-slate-500">@{post.user.username}</h6>
+              <h1 className="font-medium hover:underline">{post.user.name}</h1>
+              <h6 className="text-slate-500 hover:underline">
+                @{post.user.username}
+              </h6>
             </Link>
             <span>·</span>
-            <h5 className="text-sm">{moment(post.createdAt).fromNow()}</h5>
+            <h5 className="text-sm">
+              {moment(post.createdAt).fromNow().split("ago")[0]}
+            </h5>
           </div>
         </div>
         {/* end User name wrapper */}
-        <p>{post.text}</p>
+        <p className="text-neutral-800 mt-0.5">{post.text}</p>
         {!!post.images && (
           <div className="mt-2">
             <ImageWrapper images={post.images} />

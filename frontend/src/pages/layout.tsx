@@ -11,7 +11,7 @@ import {
   HomeIcon as HomeActiveIcon,
   UserCircleIcon as UserActiveIcon,
 } from "@heroicons/react/24/solid";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ReactNode } from "react";
 import {
@@ -93,14 +93,14 @@ export default function Layout() {
     },
     {
       label: "Search",
-      link: "/search",
+      link: "#",
       icon: <MagnifyingGlassIcon className="size-7 xl:size-7" />,
       activeIcon: <MagnifyingGlassIcon className="size-7 xl:size-7" />,
       active: location.pathname.includes("/search"),
     },
     {
       label: "Bookmark",
-      link: "/bookmark",
+      link: "#",
       icon: <BookmarkIcon className="size-7 xl:size-7" />,
       activeIcon: <BookmarkActiveIcon className="size-7 xl:size-7" />,
       active: location.pathname.includes("/bookmark"),
@@ -207,7 +207,7 @@ export default function Layout() {
       </div>
       <div
         className={clsx(
-          " flex h-max flex-grow border-x sm:ml-[4.55rem] xl:ml-[21rem] border-x-slate-300",
+          " flex h-max max-sm:w-screen flex-grow sm:border-x sm:ml-[4.55rem] xl:ml-[21rem] border-x-slate-300 overflow-x-hidden",
           !match && !topbarHidden && "max-sm:pt-[4.5rem]"
         )}
       >

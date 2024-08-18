@@ -1,5 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../../../../api/config";
 import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
 import { Post } from "../../../../types/post.type";
@@ -16,11 +16,12 @@ import useModal from "../../../../hooks/useModal";
 import clsx from "clsx";
 import { useAuth } from "../../../../context/auth_context";
 import ReactTextareaAutosize from "react-textarea-autosize";
-import { User } from "../../../../types/user.type";
+import { User, UserPreview } from "../../../../types/user.type";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Loader from "../../../../components/loader/loader";
 import useLike from "../../../../hooks/useLike";
+import { Comment } from "../../../../types/comment.type";
 
 export default function PostDetailPage() {
   const { id } = useParams();
@@ -28,10 +29,15 @@ export default function PostDetailPage() {
   const { auth }: { auth: User } = useAuth();
   const { like, liking } = useLike();
   const navigate = useNavigate();
-  const [commenting, setCommenting] = useState(false);
-  const [comment, setComment] = useState({
+
+  const [replying, setReplying] = useState<UserPreview | null>(null);
+  const commentDefaultValue = {
+    user: auth._id,
     images: [],
-  });
+    text: "",
+  };
+  const [comment, setComment] =
+    useState<typeof commentDefaultValue>(commentDefaultValue);
   const { show: isModalFullscreen, toggle: toggleFullScreenModal } = useModal();
   const { data: post, isLoading } = useQuery<Post>({
     queryKey: ["post", id],
@@ -40,83 +46,100 @@ export default function PostDetailPage() {
       if (res.status == 200) return res.data;
     },
   });
+
+  const { mutate: postComment, isPending: commentPending } = useMutation({
+    mutationFn: async (comment: Comment) => {
+      const res = await api.post(`/post/${id}/comment`, comment);
+      if (res.status == 200) return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["post", id] });
+      setReplying(null);
+      setComment(commentDefaultValue);
+    },
+  });
+
   useEffect(() => {
     console.log(comment);
   }, [comment]);
+
   useEffect(() => {
     if (comment.images.length > 0 && !isModalFullscreen)
       toggleFullScreenModal();
   }, [comment.images]);
   if (isLoading || !post) return null;
   return (
-    <div>
-      <div className="flex py-4 px-4 sm:px-6 items-center gap-4 border-b border-slate-300">
+    <div className="h-screen overflow-y-scroll">
+      <div className="flex py-4 sticky top-0 px-4 sm:px-6 items-center bg-white gap-4 border-b border-slate-300">
         <ArrowLeftIcon onClick={() => navigate(-1)} className="size-6" />
         <h1 className="font-bold text-lg">Post</h1>
       </div>
-      <div className="px-4 sm:px-6 flex flex-col py-1 sm:py-2">
-        <div className="flex gap-3.5 py-3">
-          <div className="size-10 min-h-10 min-w-10 rounded-full overflow-hidden sm:size-11">
-            <img
-              src={
-                !!post.user.profileImage
-                  ? post.user.profileImage.url
-                  : "/img/default.png"
-              }
-              className="size-full object-cover object-center"
-              alt=""
-            />
+      <div className=" flex flex-col  py-1 sm:py-2 overflow-x-hidden">
+        <div className="px-4 sm:px-6 border-b border-b-slate-300">
+          <div className="flex gap-3.5 py-3 items-center">
+            <div className="size-10 min-h-10 min-w-10 rounded-full overflow-hidden sm:size-11">
+              <img
+                src={
+                  !!post.user.profileImage
+                    ? post.user.profileImage.url
+                    : "/img/default.png"
+                }
+                className="size-full object-cover object-center"
+                alt=""
+              />
+            </div>
+            <Link to={`/${post.user.username}`} className="hover:*:underline">
+              <h1 className="font-semibold">{post.user.name}</h1>
+              <p className="text-slate-500 text-sm">@{post.user.username}</p>
+            </Link>
           </div>
-          <div>
-            <h1 className="font-semibold">{post.user.name}</h1>
-            <p className="text-slate-500 text-sm">@{post.user.username}</p>
+          <div className="py-4 text-slate-800 flex flex-col gap-4">
+            <p className="sm:text-lg">{post.text}</p>
+            {!!post.images && <ImageWrapper images={post.images} />}
+          </div>
+          <div className="text-slate-600 text-sm max-sm:mt-2 mt-1 py-2 pb-1">
+            {moment(post.createdAt).format("HH:mm • MMMM D YYYY ")}
+          </div>
+          <div className="py-3  text-slate-400 flex gap-12 items-center">
+            <div className="flex gap-1 items-center">
+              <ChatBubbleOvalLeftIcon className="size-[1.15rem] mb-[0.100rem]" />
+              <p>{post.comments.length}</p>
+            </div>
+            <div className="flex gap-1 items-center">
+              {liking ? (
+                <Loader className="size-5 invert" />
+              ) : (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    like(post._id, {
+                      onSuccess: async () =>
+                        await queryClient.invalidateQueries({
+                          queryKey: ["post", id],
+                        }),
+                    });
+                  }}
+                >
+                  {post.likes.some((like: any) => like._id == auth._id) ? (
+                    <HeartSolidIcon className="size-5 cursor-pointer fill-black" />
+                  ) : (
+                    <HeartIcon className="size-5 cursor-pointer" />
+                  )}
+                </div>
+              )}
+              <p>{post.likes.length}</p>
+            </div>
           </div>
         </div>
-        <div className="py-4 text-slate-800 flex flex-col gap-4">
-          <p className="sm:text-lg">{post.text}</p>
-          {!!post.images && <ImageWrapper images={post.images} />}
-        </div>
-        <div className="text-slate-600 text-sm max-sm:mt-2 mt-1 py-2 pb-1">
-          {moment(post.createdAt).format("h:mm • MMMM D YYYY ")}
-        </div>
-        <div className="py-2 border-b border-b-slate-300 text-slate-400 flex gap-12 items-center">
-          <div className="flex gap-1 items-center">
-            <ChatBubbleOvalLeftIcon className="size-[1.15rem] mb-[0.100rem]" />
-            <p>{post.comments.length}</p>
-          </div>
-          <div className="flex gap-1 items-center">
-            {liking ? (
-              <Loader className="size-5 invert" />
-            ) : (
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  like(post._id, {
-                    onSuccess: async () =>
-                      await queryClient.invalidateQueries({
-                        queryKey: ["post", id],
-                      }),
-                  });
-                }}
-              >
-                {post.likes.some((like: any) => like._id == auth._id) ? (
-                  <HeartSolidIcon className="size-5 cursor-pointer fill-black" />
-                ) : (
-                  <HeartIcon className="size-5 cursor-pointer" />
-                )}
-              </div>
-            )}
-            <p>{post.likes.length}</p>
-          </div>
-        </div>
+
         {/* Comment field */}
         <div
           className={clsx(
-            "max-sm:fixed left-0 right-0 bottom-0 max-sm:border-t flex sm:border-b flex-col  border-slate-300 sm:my-4 sm:pt-2 sm:items-start bg-white",
+            "max-sm:fixed left-0 *:px-2 *:sm:px-5 right-0 bottom-0 max-sm:border-t flex sm:border-b flex-col  border-slate-300 sm:my-4 sm:pt-2 sm:items-start bg-white",
             isModalFullscreen
               ? "!top-0  bg-white "
               : "items-center mt-3 max-sm:px-2",
-            commenting ? " mb-1 " : "py-2 my-1"
+            !!replying ? " pb-1 " : "py-3"
           )}
         >
           {isModalFullscreen && (
@@ -152,10 +175,28 @@ export default function PostDetailPage() {
               </div> */}
             </>
           )}
+          {!!replying && (
+            <div
+              className={clsx(
+                "flex gap-3 items-center text-sm mb-0.5 sm:mb-2 max-sm:pt-3 w-full justify-start",
+                isModalFullscreen && "max-sm:px-4"
+              )}
+            >
+              <h1 className="text-slate-500">
+                replying to{" "}
+                <Link
+                  to={`/${replying.username}`}
+                  className="text-blue-500 hover:underline"
+                >
+                  @{replying.username}
+                </Link>
+              </h1>
+            </div>
+          )}
           <div
             className={clsx(
-              "flex w-full items-center sm:py-3 sm:items-end",
-              !commenting && !isModalFullscreen
+              "flex w-full items-center sm:pb-5 sm:py-3 sm:items-end",
+              !!!replying && !isModalFullscreen
                 ? "max-sm:border-b border-slate-300 max-sm:pb-2"
                 : "max-sm:pb-0",
               isModalFullscreen &&
@@ -168,7 +209,7 @@ export default function PostDetailPage() {
                   className={clsx(
                     "size-9 min-h-9 min-w-9 rounded-full overflow-hidden",
                     !isModalFullscreen && "max-sm:hidden",
-                    !commenting && "sm:block"
+                    !!!replying && "sm:block"
                   )}
                 >
                   <img
@@ -184,18 +225,22 @@ export default function PostDetailPage() {
               </div>
             }
             <ReactTextareaAutosize
-              onClick={() => setCommenting(true)}
+              onChange={(e) =>
+                setComment((comment) => ({ ...comment, text: e.target.value }))
+              }
+              value={comment.text}
+              onClick={() => setReplying(post.user)}
               className={clsx(
-                "max-sm:py-1 resize-none sm:flex-grow pr-2 sm:pl-3  sm:pb-2 max-sm:px-0.5 sm:pr-5 focus:outline-none",
+                "max-sm:py-1 resize-none sm:flex-grow pr-2 sm:pl-3  sm:pb-2 sm:pr-5 focus:outline-none",
                 isModalFullscreen ? "max-sm:w-full max-sm:!pt-0" : "flex-grow ",
-                commenting && !isModalFullscreen
+                !!replying && !isModalFullscreen
                   ? "max-sm:py-2 border-none "
                   : ""
               )}
               placeholder="Post your reply"
             />
 
-            {commenting && !isModalFullscreen ? (
+            {!!replying && !isModalFullscreen ? (
               <div
                 className="flex origin-center rotate-45 scale-90 sm:hidden mt-1"
                 onClick={toggleFullScreenModal}
@@ -208,8 +253,17 @@ export default function PostDetailPage() {
                 <CameraIcon className="size-6 text-slate-500 sm:hidden" />
               )
             )}
-            <button className="py-1 sm:mb-1 text-white bg-black rounded-full px-5 max-sm:hidden ms-auto text-sm">
-              Post
+            <button
+              disabled={comment.text.length == 0 && comment.images.length == 0}
+              onClick={() => postComment(comment)}
+              className={clsx(
+                "py-1 sm:mb-1 text-white disabled:bg-gray-500 bg-black rounded-full px-5 ms-auto text-sm flex justify-center",
+                !!replying
+                  ? "max-sm:fixed max-sm:bottom-2.5 max-sm:right-2.5 "
+                  : "max-sm:hidden"
+              )}
+            >
+              {commentPending ? <Loader className=" size-5" /> : "Post"}
             </button>
           </div>
           {
@@ -247,7 +301,7 @@ export default function PostDetailPage() {
                             "object-cover size-full",
                             "rounded-md"
                           )}
-                          src={URL.createObjectURL(image)}
+                          src={URL.createObjectURL(image as any)}
                           alt=""
                         />
                       </div>
@@ -257,10 +311,10 @@ export default function PostDetailPage() {
               </Swiper>
             )
           }
-          {commenting && (
+          {!!replying && (
             <div
               className={clsx(
-                "flex w-full  py-2 border-t border-t-slate-300 mt-auto sm:py-3 sm:sticky sm:bottom-0 sm:z-[3] bg-white",
+                "flex w-full  py-3 border-t border-t-slate-300 mt-auto sm:py-3 sm:sticky sm:bottom-0 sm:z-[3] bg-white",
                 isModalFullscreen && "max-sm:px-4"
               )}
             >
@@ -284,6 +338,54 @@ export default function PostDetailPage() {
           )}
         </div>
         {/* End Comment field */}
+
+        {/* Comments */}
+        <div className="flex flex-col pb-36 mt-0 sm:-mt-4">
+          {post.comments.length > 0 ? (
+            post.comments.map((comment, i) => (
+              <div
+                key={i}
+                className="flex gap-3 items-center border-b border-b-slate-200 px-4 sm:px-6 py-3.5 w-max min-w-full"
+              >
+                <div className="size-9 min-h-9 min-w-9 sm:size-10 rounded-full overflow-hidden">
+                  <img
+                    src={
+                      !!comment.user.profileImage
+                        ? comment.user.profileImage.url
+                        : "/img/default.png"
+                    }
+                    alt=""
+                    className="size-full object-cover object-center"
+                  />
+                </div>
+                <div>
+                  <div className="flex gap-2 items-center">
+                    <Link
+                      to={`/${comment.user.username}`}
+                      className="flex gap-1.5 hover:*:underline"
+                    >
+                      <h1 className="font-semibold">{comment.user.name}</h1>
+                      <h3 className=" text-slate-500">
+                        @{comment.user.username}
+                      </h3>
+                    </Link>
+                    <span>·</span>
+                    <h5 className="text-sm text-slate-500">
+                      {moment(comment.createdAt).fromNow()}
+                    </h5>
+                  </div>
+
+                  <p className="mt-0.5 text-slate-800">{comment.text}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex justify-center py-12 text-sm">
+              <h1 className="text-slate-600">No Comments</h1>
+            </div>
+          )}
+        </div>
+        {/* End Comments */}
       </div>
     </div>
   );

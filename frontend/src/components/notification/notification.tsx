@@ -7,8 +7,8 @@ const LikeNotification = ({
   notification: NotificationType;
 }) => {
   return (
-    <div className="flex py-3 px-5 gap-3.5 border-b border-b-slate-200 items-center">
-      <div className="size-10 sm:size-11 min-h-10 sm:min-h-11 sm:min-w-11 min-w-10 rounded-full overflow-hidden">
+    <div className="flex py-3 px-4 gap-3.5 border-b border-b-slate-200 items-center">
+      <div className="size-9 min-h-9 min-w-9 sm:size-10  sm:min-h-10 sm:min-w-10 rounded-full overflow-hidden">
         <img
           src={
             !!notification.from.profileImage
@@ -47,7 +47,11 @@ const LikeNotification = ({
     </div>
   );
 };
-const CommentNotification = () => {
+const CommentNotification = ({
+  notification,
+}: {
+  notification: NotificationType;
+}) => {
   return <div className="flex">Comment Notification</div>;
 };
 const FollowNotification = ({
@@ -56,8 +60,8 @@ const FollowNotification = ({
   notification: NotificationType;
 }) => {
   return (
-    <div className="flex py-3 px-5 gap-3.5 border-b border-b-slate-200 items-center">
-      <div className="size-10 sm:size-11 min-h-10 sm:min-h-11 sm:min-w-11 min-w-10 rounded-full overflow-hidden">
+    <div className="flex py-3 px-4 gap-3.5 border-b border-b-slate-200 items-center">
+      <div className="size-9 min-h-9 min-w-9 sm:size-10  sm:min-h-10 sm:min-w-10 rounded-full overflow-hidden">
         <img
           src={
             !!notification.from.profileImage
@@ -91,7 +95,7 @@ export default function Notification({
   const n = {
     follow: <FollowNotification notification={notification} />,
     like: <LikeNotification notification={notification} />,
-    comment: <CommentNotification />,
+    comment: <CommentNotification notification={notification} />,
   };
 
   return n[notification.type];

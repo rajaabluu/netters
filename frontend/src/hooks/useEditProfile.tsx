@@ -3,9 +3,7 @@ import api from "../api/config";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth_context";
 
-export default function useEditProfile(
-  callback?: (data: any, err: any) => void
-) {
+export default function useEditProfile() {
   const { auth } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -22,12 +20,9 @@ export default function useEditProfile(
       let username = auth.username;
       if (username !== data.username) navigate("/" + data.username);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["profile"] }),
+        queryClient.invalidateQueries({ queryKey: ["auth"] }),
         queryClient.invalidateQueries({ queryKey: ["posts", data.username] }),
       ]);
-      if (callback) {
-        callback(data, null);
-      }
     },
   });
   return { update, updating };

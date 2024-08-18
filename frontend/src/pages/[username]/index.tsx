@@ -4,7 +4,11 @@ import {
   CameraIcon,
   XMarkIcon,
 } from "@heroicons/react/20/solid";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/config";
 import moment from "moment";
@@ -27,20 +31,11 @@ const forms = [
   { name: "link", label: "Link" },
 ];
 
-const defaultCredentials = {
-  name: "",
-  username: "",
-  profileImage: null,
-  coverImage: null,
-  bio: "",
-  link: "",
-};
-
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [inView, setInView] = useState(false);
-  const [credentials, setCredentials] =
-    useState<typeof defaultCredentials>(defaultCredentials);
+  const [credentials, setCredentials] = useState<any>({});
   const [type, setType] = useState<"post" | "likes">("post");
   const { toggle: toggleEditModal, show: editModalShow } = useModal();
   const { toggle: toggleFollowersModal, show: followersModalShow } = useModal();
@@ -48,7 +43,7 @@ export default function ProfilePage() {
   const { username } = useParams();
   const { auth } = useAuth();
   const { follow, following } = useFollow();
-  const { update, updating } = useEditProfile(() => toggleEditModal());
+  const { update, updating } = useEditProfile();
   const { data: profile, isLoading } = useQuery<UserType>({
     enabled: !!username,
     queryKey: ["profile", username],
@@ -98,7 +93,7 @@ export default function ProfilePage() {
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { value, id } = e.target;
-    setCredentials((c) => ({ ...c, [id]: value }));
+    setCredentials((c: any) => ({ ...c, [id]: value }));
   };
 
   useEffect(() => {
@@ -114,20 +109,17 @@ export default function ProfilePage() {
     }
   }, [profile]);
 
-  const getProfileImage = (auth: UserType) => {
-    if (!!auth.profileImage && !!auth.profileImage.url)
-      return auth.profileImage.url;
-    else return URL.createObjectURL(credentials.profileImage as any);
+  const getProfileImage = () => {
+    return !!credentials.profileImage?.url
+      ? credentials.profileImage.url
+      : URL.createObjectURL(credentials.profileImage as any);
   };
 
-  const getCoverImage = (auth: UserType) => {
-    if (!!auth.coverImage && !!auth.coverImage.url) return auth.coverImage.url;
-    else return URL.createObjectURL(credentials.coverImage as any);
+  const getCoverImage = () => {
+    return !!credentials.coverImage?.url
+      ? credentials.coverImage.url
+      : URL.createObjectURL(credentials.coverImage as any);
   };
-
-  useEffect(() => {
-    console.log(credentials);
-  }, [credentials]);
 
   if (isLoading) return null;
 
@@ -155,8 +147,24 @@ export default function ProfilePage() {
                 <Loader className="size-7 invert ms-auto"></Loader>
               ) : (
                 <button
-                  onClick={async () => {
-                    await update(credentials as any);
+                  onClick={() => {
+                    update(credentials as any, {
+                      onSuccess: async () => {
+                        toggleEditModal();
+                        await Promise.all([
+                          auth.username == username &&
+                            queryClient.invalidateQueries({
+                              queryKey: ["auth"],
+                            }),
+                          queryClient.invalidateQueries({
+                            queryKey: ["posts", username],
+                          }),
+                          queryClient.invalidateQueries({
+                            queryKey: ["profile", username],
+                          }),
+                        ]);
+                      },
+                    });
                   }}
                   className="bg-black px-4 rounded-full ms-auto py-1.5 text-sm text-white"
                 >
@@ -167,7 +175,7 @@ export default function ProfilePage() {
             <div
               style={{
                 backgroundImage: !!credentials.coverImage
-                  ? `url(${getCoverImage(auth)})`
+                  ? `url(${getCoverImage()})`
                   : " ",
               }}
               className="min-h-36 h-36 bg-cover bg-center flex justify-center items-center bg-gray-100 overflow-hidden"
@@ -185,7 +193,7 @@ export default function ProfilePage() {
                 type="file"
                 id="coverImage"
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  setCredentials((c) => ({
+                  setCredentials((c: any) => ({
                     ...c,
                     coverImage: !!e.target.files && (e.target.files[0] as any),
                   }));
@@ -196,7 +204,7 @@ export default function ProfilePage() {
             <div
               style={{
                 backgroundImage: !!credentials.profileImage
-                  ? `url(${getProfileImage(auth)})`
+                  ? `url(${getProfileImage()})`
                   : "",
               }}
               className="size-[4.6rem] bg-cover bg-center rounded-full bg-gray-200 ml-4 -mt-[2.5rem] flex items-center justify-center"
@@ -211,7 +219,7 @@ export default function ProfilePage() {
               </label>
               <input
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  setCredentials((c) => ({
+                  setCredentials((c: any) => ({
                     ...c,
                     profileImage:
                       !!e.target.files && (e.target.files[0] as any),
@@ -242,7 +250,7 @@ export default function ProfilePage() {
                         id={form.name}
                         value={
                           credentials[
-                            form.name as keyof typeof defaultCredentials
+                            form.name as keyof typeof credentials
                           ] as any
                         }
                         className="resize-none sm:border sm:px-3 sm:py-2 sm:rounded-md  flex-grow min-h-24 focus:outline-none border-b-2 py-0.5 border-slate-300"
@@ -253,7 +261,7 @@ export default function ProfilePage() {
                         id={form.name}
                         value={
                           credentials[
-                            form.name as keyof typeof defaultCredentials
+                            form.name as keyof typeof credentials
                           ] as any
                         }
                         className="border-b-2 sm:border sm:px-3 sm:rounded-md  sm:py-2 py-1 flex-grow border-slate-300"
@@ -276,7 +284,7 @@ export default function ProfilePage() {
             className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
           ></div>
           <div className="fixed z-[9999] sm:mx-auto sm:my-auto top-0 left-0 bottom-0 sm:min-w-[28rem] md:w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
-            <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
+            <div className=" px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
               <ArrowLeftIcon
                 onClick={toggleFollowersModal}
                 className="size-6 sm:hidden cursor-pointer"
@@ -317,7 +325,7 @@ export default function ProfilePage() {
             className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
           ></div>
           <div className="fixed z-[9999] sm:mx-auto sm:my-auto top-0 left-0 bottom-0 sm:min-w-[28rem] md:min-w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
-            <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
+            <div className="px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
               <ArrowLeftIcon
                 onClick={toggleFollowingModal}
                 className="size-6 sm:hidden cursor-pointer"
