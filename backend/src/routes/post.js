@@ -231,7 +231,8 @@ route.get("/:id", checkAuth, async (req, res) => {
     const post = await Post.findById(req.params.id)
       .populate("user", "name username profileImage")
       .populate("likes", "name username profileImage")
-      .populate("comments.user", "name username profileImage");
+      .populate("comments.from", "name username profileImage")
+      .populate("comments.to", "name username profileImage");
     return res.status(200).json(post);
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -267,27 +268,46 @@ route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
 });
 
 // Comment on post
-route.post("/:id/comment", checkAuth, async (req, res) => {
-  try {
-    if (!req.body.text) {
-      return res.status(422).json({ message: "Text Is Required" });
+route.post(
+  "/:id/comment",
+  checkAuth,
+  upload.array("images", 4),
+  async (req, res) => {
+    try {
+      let images = [];
+      if (!req.body.text) {
+        return res.status(422).json({ message: "Text Is Required" });
+      }
+      if (!!req.files) {
+        for (let image of req.files) {
+          const result = await cloudinary.uploader.upload(image, {
+            folder: "comments",
+          });
+          images.push({ url: result.secure_url, publicId: result.public_id });
+        }
+      }
+      const post = await Post.findById(req.params.id);
+      if (!post) return res.status(404).json({ message: "Post Not Found" });
+      post.comments.push({
+        from: req.user._id,
+        to: req.body.to,
+        text: req.body.text,
+        images: images,
+      });
+      await post.save();
+      await new Notification({
+        type: "comment",
+        postId: post._id,
+        from: req.user._id,
+        to: post.user,
+        text: req.body.text,
+      }).save();
+      return res.status(200).json({ message: "Success Comment on Post" });
+    } catch (err) {
+      return res.status(500).json({ message: err.message });
     }
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: "Post Not Found" });
-    post.comments.push({ user: req.user._id, text: req.body.text });
-    await post.save();
-    await new Notification({
-      type: "comment",
-      postId: post._id,
-      from: req.user._id,
-      to: post.user,
-      text: req.body.text,
-    }).save();
-    return res.status(200).json({ message: "Success Comment on Post" });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
   }
-});
+);
 
 // Like Post
 route.post("/:id/like", checkAuth, async (req, res) => {

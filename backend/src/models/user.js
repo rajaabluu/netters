@@ -11,6 +11,7 @@ const schema = new mongoose.Schema(
       type: String,
       required: [true, "username field is required"],
       unique: true,
+      trim: true,
     },
     email: {
       type: String,
