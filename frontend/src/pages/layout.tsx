@@ -14,13 +14,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ReactNode } from "react";
-import {
-  Link,
-  matchPath,
-  Outlet,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { Link, matchPath, Outlet, useLocation } from "react-router-dom";
 import api from "../api/config";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth_context";
@@ -30,7 +24,6 @@ import useModal from "../hooks/useModal";
 
 export default function Layout() {
   const { auth, isLoading } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const { show, toggle } = useModal();
   const queryClient = useQueryClient();
@@ -58,7 +51,6 @@ export default function Layout() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["auth"] });
-      navigate("/auth/login");
       toast.success("Logout Success");
     },
   });

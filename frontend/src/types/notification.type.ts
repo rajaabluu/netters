@@ -14,4 +14,5 @@ export interface Notification {
   read: boolean;
   post?: any;
   createdAt: string;
+  text?: string;
 }

@@ -4,12 +4,13 @@ const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const cloudinary = require("cloudinary").v2;
 const upload = require("../middleware/multer");
-
+const { connectMongoDB } = require("../config/mongo");
 const route = require("express").Router();
 
 route.get("/:username/profile", checkAuth, async (req, res) => {
   const { username } = req.params;
   try {
+    connectMongoDB();
     const user = await User.findOne({ username })
       .select("-password")
       .populate("following", "name username profileImage")
@@ -24,6 +25,7 @@ route.get("/:username/profile", checkAuth, async (req, res) => {
 
 route.post("/:id/follow", checkAuth, async (req, res) => {
   try {
+    connectMongoDB();
     const { id } = req.params;
     const modifiedUser = await User.findById(id);
     const currentUser = await User.findById(req.user._id);
@@ -64,6 +66,7 @@ route.post("/:id/follow", checkAuth, async (req, res) => {
 
 route.get("/suggested", checkAuth, async (req, res) => {
   try {
+    connectMongoDB();
     const followedByMe = await User.findById(req.user._id).select("following");
     const users = await User.aggregate([
       {
@@ -100,6 +103,7 @@ route.put(
     let { profileImage, coverImage } = req?.files || {};
 
     try {
+      connectMongoDB();
       let user = await User.findById(req.user._id);
       if (!user) return res.status(404).json({ message: "User Not Found" });
       if (

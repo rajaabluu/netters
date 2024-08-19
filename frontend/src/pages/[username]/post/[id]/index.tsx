@@ -54,20 +54,23 @@ export default function PostDetailPage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["post", id] });
+      await queryClient.invalidateQueries({ queryKey: ["posts"] });
       setReplying(null);
       setComment(commentDefaultValue);
     },
   });
 
   useEffect(() => {
-    console.log(comment);
-  }, [comment]);
-
-  useEffect(() => {
     if (comment.images.length > 0 && !isModalFullscreen)
       toggleFullScreenModal();
   }, [comment.images]);
-  if (isLoading || !post) return null;
+  if (isLoading || !post)
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader className="size-10 invert" />
+      </div>
+    );
+
   return (
     <div className="h-screen overflow-y-scroll">
       <div className="flex py-4 sticky top-0 px-4 sm:px-6 items-center bg-white gap-4 border-b border-slate-300">

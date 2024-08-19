@@ -121,7 +121,12 @@ export default function ProfilePage() {
       : URL.createObjectURL(credentials.coverImage as any);
   };
 
-  if (isLoading) return null;
+  if (isLoading)
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader className="size-10 invert" />
+      </div>
+    );
 
   return (
     <>

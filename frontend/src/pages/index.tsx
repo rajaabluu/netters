@@ -194,7 +194,7 @@ export default function HomePage() {
           <button
             disabled={newPost.images.length == 0 && newPost.text.length == 0}
             onClick={() => createNewPost()}
-            className="px-5 cursor-pointer max-sm:hidden ms-auto font-medium py-1.5 bg-black text-white rounded-full"
+            className="px-5 cursor-pointer max-sm:hidden disabled:bg-gray-400 disabled:cursor-default ms-auto font-medium py-1.5 bg-black text-white rounded-full"
           >
             {pendingNewPost ? <Loader className="size-5" /> : "Post"}
           </button>

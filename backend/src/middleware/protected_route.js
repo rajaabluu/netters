@@ -1,8 +1,10 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const { connectMongoDB } = require("../config/mongo");
 
 const checkAuth = async (req, res, next) => {
   try {
+    connectMongoDB();
     const token = req.cookies.jwt;
     if (!token || token === undefined) {
       return res.status(401).json({

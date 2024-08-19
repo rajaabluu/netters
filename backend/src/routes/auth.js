@@ -5,10 +5,12 @@ const route = require("express").Router();
 const bcrypt = require("bcrypt");
 const { generateTokenAndSetCookie } = require("../utils/token");
 const { checkAuth } = require("../middleware/protected_route");
+const { connectMongoDB } = require("../config/mongo");
 
 route.post("/signup", async (req, res) => {
   const { username, email, name, password } = req.body;
   try {
+    connectMongoDB();
     const usernameTaken = await User.findOne({ username });
     const emailTaken = await User.findOne({ email });
     const errors = {};
@@ -45,6 +47,7 @@ route.post("/signup", async (req, res) => {
 route.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
+    connectMongoDB();
     const user = await User.findOne({ username });
     if (!user) {
       return res
@@ -79,7 +82,13 @@ route.post("/login", async (req, res) => {
 
 route.post("/logout", async (req, res) => {
   try {
-    res.cookie("jwt", "", { maxAge: 0 });
+    connectMongoDB();
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      partitioned: true,
+    });
     res.status(200).json({ message: "Logout Successful" });
   } catch (err) {
     console.log(err);
@@ -89,6 +98,7 @@ route.post("/logout", async (req, res) => {
 
 route.get("/me", checkAuth, async (req, res) => {
   try {
+    connectMongoDB();
     const user = await User.findById(req.user._id)
       .select("-password")
       .populate("following", "name username profileImage")

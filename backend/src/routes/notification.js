@@ -1,6 +1,7 @@
 const { checkAuth } = require("../middleware/protected_route");
 const Notification = require("../models/notification");
 const Post = require("../models/post");
+const { connectMongoDB } = require("../config/mongo");
 
 const route = require("express").Router();
 
@@ -8,6 +9,7 @@ const route = require("express").Router();
 
 route.get("/", checkAuth, async (req, res) => {
   try {
+    connectMongoDB();
     const { page } = req.query;
     const itemsPerPage = 10;
     const notificationsTotal = await Notification.find({

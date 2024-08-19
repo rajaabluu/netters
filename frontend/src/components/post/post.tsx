@@ -19,6 +19,9 @@ import { Post as PostType } from "../../types/post.type";
 import useFollow from "../../hooks/useFollow";
 import useLike from "../../hooks/useLike";
 
+export const getPostUrl = (post: PostType) =>
+  `/${post.user.username}/post/${post._id}`;
+
 export default function Post({ post, user }: { post: PostType; user: any }) {
   const { show, toggle, close } = useModal();
   const l = useLocation();
@@ -50,8 +53,6 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
   });
 
   const isFollowing = user.following.some((u: any) => u._id == post.user._id);
-  const getPostUrl = (post: PostType) =>
-    `/${post.user.username}/post/${post._id}`;
 
   return (
     <div
@@ -78,7 +79,9 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
               to={`/${post.user.username}`}
               className="flex gap-1.5 "
             >
-              <h1 className="font-medium hover:underline">{post.user.name}</h1>
+              <h1 className="font-semibold hover:underline">
+                {post.user.name}
+              </h1>
               <h6 className="text-slate-500 hover:underline">
                 @{post.user.username}
               </h6>

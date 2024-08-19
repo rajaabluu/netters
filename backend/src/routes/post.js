@@ -4,6 +4,7 @@ const upload = require("../middleware/multer");
 const { checkAuth } = require("../middleware/protected_route");
 const Notification = require("../models/notification");
 const { default: mongoose } = require("mongoose");
+const { connectMongoDB } = require("../config/mongo");
 const cloudinary = require("cloudinary").v2;
 
 // Get All / Followed Users Post
@@ -12,6 +13,8 @@ route.get("/", checkAuth, async (req, res) => {
   const page = Math.max(0, req.query.page || 1);
   const totalPosts = await Post.countDocuments({});
   try {
+    connectMongoDB();
+
     const posts = await Post.aggregate([
       {
         $match:
@@ -88,6 +91,7 @@ route.get("/:id/user", checkAuth, async (req, res) => {
     {}
   );
   try {
+    connectMongoDB();
     const posts = await Post.aggregate([
       { $match: { user: new mongoose.Types.ObjectId(req.params.id) } },
       { $sort: { createdAt: -1 } },
@@ -159,6 +163,7 @@ route.get("/:id/user/likes", checkAuth, async (req, res) => {
     likes: { $in: [new mongoose.Types.ObjectId(req.params.id)] },
   }).countDocuments({});
   try {
+    connectMongoDB();
     const posts = await Post.aggregate([
       {
         $match: {
@@ -228,6 +233,7 @@ route.get("/:id/user/likes", checkAuth, async (req, res) => {
 // Get Post Detail
 route.get("/:id", checkAuth, async (req, res) => {
   try {
+    connectMongoDB();
     const post = await Post.findById(req.params.id)
       .populate("user", "name username profileImage")
       .populate("likes", "name username profileImage")
@@ -243,6 +249,7 @@ route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
   const { text } = req.body;
   let images = [];
   try {
+    connectMongoDB();
     if (req.files) {
       for (let file of req.files) {
         const result = await cloudinary.uploader.upload(file.path, {
@@ -273,6 +280,7 @@ route.post(
   upload.array("images", 4),
   async (req, res) => {
     try {
+      connectMongoDB();
       let images = [];
       if (!req.body.text) {
         return res.status(422).json({ message: "Text Is Required" });
@@ -310,6 +318,7 @@ route.post(
 // Like Post
 route.post("/:id/like", checkAuth, async (req, res) => {
   try {
+    connectMongoDB();
     const { id } = req.params;
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: "Post Not Found" });
@@ -341,6 +350,7 @@ route.post("/:id/like", checkAuth, async (req, res) => {
 
 route.delete("/:id", checkAuth, async (req, res) => {
   try {
+    connectMongoDB();
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
     if (post.images !== null) {

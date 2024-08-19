@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import Input from "../../../components/forms/input";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -50,11 +50,6 @@ export default function SignUpPage() {
         setValidationErrors(err.response.data.errors);
     },
   });
-
-  useEffect(() => {
-    console.log(credentials);
-  }, [credentials]);
-
   return (
     <div className="flex h-screen">
       <div className="flex max-md:hidden md:flex-grow bg-[#18181B]"></div>

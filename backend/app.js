@@ -8,7 +8,6 @@ const userRoute = require("./src/routes/user");
 const postRoute = require("./src/routes/post");
 const notificationRoute = require("./src/routes/notification");
 const cookieParser = require("cookie-parser");
-const { connectMongoDB } = require("./src/config/mongo");
 const cloudinary = require("cloudinary").v2;
 
 dotenv.config();
@@ -50,5 +49,4 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log("Server Running on http://localhost:" + PORT);
-  connectMongoDB();
 });
