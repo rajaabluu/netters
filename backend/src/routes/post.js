@@ -303,7 +303,7 @@ route.post(
       await post.save();
       await new Notification({
         type: "comment",
-        postId: post._id,
+        post: post._id,
         from: req.user._id,
         to: post.user,
         text: req.body.text,
