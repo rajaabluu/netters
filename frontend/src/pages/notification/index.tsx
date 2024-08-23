@@ -34,9 +34,7 @@ export default function NotificationPage() {
             <Fragment key={i}>
               {page?.data.length > 0 ? (
                 page?.data.map((notification: NotificationType) => (
-                  <>
-                    <Notification notification={notification} />
-                  </>
+                  <Notification notification={notification} />
                 ))
               ) : (
                 <h6 className="mx-6 mt-8 text-slate-500">No Notifications</h6>
