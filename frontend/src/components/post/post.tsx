@@ -94,7 +94,7 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
         </div>
         {/* end User name wrapper */}
         <p className="text-neutral-800 mt-0.5">{post.text}</p>
-        {!!post.images && (
+        {!!post.images && post.images.length > 0 && (
           <div className="mt-2">
             <ImageWrapper images={post.images} />
           </div>

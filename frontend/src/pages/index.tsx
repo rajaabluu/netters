@@ -49,12 +49,7 @@ export default function HomePage() {
   });
 
   const { mutate: createNewPost, isPending: pendingNewPost } = useMutation({
-    mutationFn: async () => {
-      const data = new FormData();
-      data.append("text", newPost.text);
-      newPost.images.forEach((element) => {
-        data.append("images", element);
-      });
+    mutationFn: async (data: any) => {
       try {
         const res = await api.post("/post", data, {
           headers: {
@@ -124,7 +119,7 @@ export default function HomePage() {
           />
           <button
             disabled={newPost.images.length == 0 && newPost.text.length == 0}
-            onClick={() => createNewPost()}
+            onClick={() => createNewPost(newPost)}
             className="px-5 font-medium py-1.5 max-sm:text-sm bg-black text-white rounded-full"
           >
             {pendingNewPost ? <Loader className="size-6" /> : "Post"}
@@ -193,7 +188,7 @@ export default function HomePage() {
           </label>
           <button
             disabled={newPost.images.length == 0 && newPost.text.length == 0}
-            onClick={() => createNewPost()}
+            onClick={() => createNewPost(newPost)}
             className="px-5 cursor-pointer max-sm:hidden disabled:bg-gray-400 disabled:cursor-default ms-auto font-medium py-1.5 bg-black text-white rounded-full"
           >
             {pendingNewPost ? <Loader className="size-5" /> : "Post"}

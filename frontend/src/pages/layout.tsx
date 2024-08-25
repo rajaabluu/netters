@@ -203,7 +203,7 @@ export default function Layout() {
           !match && !topbarHidden && "max-sm:pt-[4.5rem]"
         )}
       >
-        <div className="min-h-screen sm:w-full sm:max-w-[600px] flex-grow border-r border-r-slate-300">
+        <div className="min-h-screen sm:w-full max-w-[600px] flex-grow border-r border-r-slate-300">
           <Outlet />
         </div>
         {/* Suggested Users */}

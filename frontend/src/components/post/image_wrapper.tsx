@@ -1,20 +1,28 @@
 import clsx from "clsx";
+import { UserImage } from "../../types/image.type";
 
-export default function ImageWrapper({ images }: { images: any[] }) {
+export default function ImageWrapper({
+  images,
+  className,
+}: {
+  images: UserImage[];
+  className?: string;
+}) {
   return (
     <div
       className={clsx(
         "flex rounded-md overflow-hidden",
         (images.length == 1 || images.length == 4) && "mr-6",
         images.length == 3 && "aspect-video",
-        images.length == 4 && "aspect-[14/10]"
+        images.length == 4 && "aspect-[14/10]",
+        className
       )}
     >
       <div
         className={clsx(
           "flex flex-col",
           images.length == 1
-            ? "w-full max-w-96 rounded-md overflow-hidden"
+            ? "w-full max-w-80 rounded-md overflow-hidden"
             : "w-1/2 border-r-2  border-slate-300"
         )}
       >

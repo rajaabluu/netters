@@ -5,19 +5,18 @@ import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
 import { Post } from "../../../../types/post.type";
 import ImageWrapper from "../../../../components/post/image_wrapper";
 import moment from "moment";
+import { ChatBubbleOvalLeftIcon, HeartIcon } from "@heroicons/react/24/outline";
 import {
   CameraIcon,
-  ChatBubbleOvalLeftIcon,
-  HeartIcon,
-} from "@heroicons/react/24/outline";
-import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
+  HeartIcon as HeartSolidIcon,
+} from "@heroicons/react/24/solid";
 import { ChangeEvent, useEffect, useState } from "react";
 import useModal from "../../../../hooks/useModal";
 import clsx from "clsx";
 import { useAuth } from "../../../../context/auth_context";
 import ReactTextareaAutosize from "react-textarea-autosize";
 import { User, UserPreview } from "../../../../types/user.type";
-import { PhotoIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { XMarkIcon } from "@heroicons/react/20/solid";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Loader from "../../../../components/loader/loader";
 import useLike from "../../../../hooks/useLike";
@@ -49,7 +48,11 @@ export default function PostDetailPage() {
 
   const { mutate: postComment, isPending: commentPending } = useMutation({
     mutationFn: async (comment: Comment) => {
-      const res = await api.post(`/post/${id}/comment`, comment);
+      const res = await api.post(`/post/${id}/comment`, comment, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       if (res.status == 200) return res.data;
     },
     onSuccess: async () => {
@@ -57,6 +60,7 @@ export default function PostDetailPage() {
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
       setReplying(null);
       setComment(commentDefaultValue);
+      if (isModalFullscreen) toggleFullScreenModal();
     },
   });
 
@@ -98,7 +102,9 @@ export default function PostDetailPage() {
           </div>
           <div className="py-4 text-slate-800 flex flex-col gap-4">
             <p className="sm:text-lg">{post.text}</p>
-            {!!post.images && <ImageWrapper images={post.images} />}
+            {!!post.images && post.images.length > 0 && (
+              <ImageWrapper images={post.images} />
+            )}
           </div>
           <div className="text-slate-600 text-sm max-sm:mt-2 mt-1 py-2 pb-1">
             {moment(post.createdAt).format("HH:mm • MMMM D YYYY ")}
@@ -138,26 +144,23 @@ export default function PostDetailPage() {
         {/* Comment field */}
         <div
           className={clsx(
-            "max-sm:fixed left-0 *:px-2 *:sm:px-5 right-0 bottom-0 max-sm:border-t flex sm:border-b flex-col  border-slate-300 sm:my-4 sm:pt-2 sm:items-start bg-white",
+            "max-sm:fixed left-0 *:px-1 *:sm:px-5 right-0 bottom-0 max-sm:border-t flex sm:border-b flex-col  border-slate-300 sm:my-4 sm:pt-2 sm:items-start bg-white",
             isModalFullscreen
-              ? "!top-0  bg-white "
+              ? "!top-0  bg-white *:!px-4"
               : "items-center mt-3 max-sm:px-2",
             !!replying ? " pb-1 " : "py-3"
           )}
         >
           {isModalFullscreen && (
             <>
-              <div className="flex sm:hidden gap-3 justify-between py-3 border-b border-b-slate-300 px-4">
+              <div className="flex sm:hidden gap-3 justify-between py-4 border-b border-b-slate-300 !px-4">
                 <ArrowLeftIcon
-                  className="size-5"
+                  className="size-6"
                   onClick={() => {
                     toggleFullScreenModal();
                     setComment((c) => ({ ...c, images: [] }));
                   }}
                 />
-                <div className="font-medium text-sm bg-black text-white rounded-full px-4 py-1">
-                  Reply
-                </div>
               </div>
               {/* <div className="flex mt-6 gap-3 sm:hidden items-start px-4">
                 <div className="size-9 sm:size-11 min-h-9 min-w-9 rounded-full overflow-hidden">
@@ -182,7 +185,7 @@ export default function PostDetailPage() {
             <div
               className={clsx(
                 "flex gap-3 items-center text-sm mb-0.5 sm:mb-2 max-sm:pt-3 w-full justify-start",
-                isModalFullscreen && "max-sm:px-4"
+                isModalFullscreen && "max-sm:px-4 max-sm:!pt-5"
               )}
             >
               <h1 className="text-slate-500">
@@ -263,10 +266,12 @@ export default function PostDetailPage() {
                 "py-1 sm:mb-1 text-white disabled:bg-gray-500 bg-black rounded-full px-5 ms-auto text-sm flex justify-center",
                 !!replying
                   ? "max-sm:fixed max-sm:bottom-2.5 max-sm:right-2.5 "
-                  : "max-sm:hidden"
+                  : "max-sm:hidden",
+                isModalFullscreen &&
+                  "max-sm:!top-3.5 max-sm:!bottom-auto max-sm:!right-3.5"
               )}
             >
-              {commentPending ? <Loader className=" size-5" /> : "Post"}
+              {commentPending ? <Loader className=" size-5" /> : "Reply"}
             </button>
           </div>
           {
@@ -321,9 +326,9 @@ export default function PostDetailPage() {
                 isModalFullscreen && "max-sm:px-4"
               )}
             >
-              <label htmlFor="images" className="flex gap-3 items-center">
-                <PhotoIcon className="size-5 fill-slate-600" />
-                <h1 className="text-sm">Add image</h1>
+              <label htmlFor="images" className="flex gap-2 items-end">
+                <CameraIcon className="size-5 text-slate-600" />
+                <h1 className="text-sm text-slate-500 pt-1">Add image</h1>
               </label>
               <input
                 multiple
@@ -348,9 +353,9 @@ export default function PostDetailPage() {
             post.comments.map((comment, i) => (
               <div
                 key={i}
-                className="flex gap-3 items-center border-b border-b-slate-200 px-4 sm:px-6 py-3.5 w-max min-w-full"
+                className="flex gap-3 items-start border-b border-b-slate-200 px-4 sm:px-6 py-3.5 min-w-full"
               >
-                <div className="size-9 min-h-9 min-w-9 sm:size-10 rounded-full overflow-hidden">
+                <div className="size-9 min-h-9 min-w-9 sm:size-10 rounded-full overflow-hidden flex items-start">
                   <img
                     src={
                       !!comment.user.profileImage
@@ -374,11 +379,20 @@ export default function PostDetailPage() {
                     </Link>
                     <span>·</span>
                     <h5 className="text-sm text-slate-500">
-                      {moment(comment.createdAt).fromNow()}
+                      {moment(comment.createdAt).fromNow().split(" ago")[0]}
                     </h5>
                   </div>
-
-                  <p className="mt-0.5 text-slate-800">{comment.text}</p>
+                  <div>
+                    <p className="mt-0.5 text-slate-800 pb-4 break-all w-fit">
+                      {comment.text}
+                    </p>
+                    {!!comment.images && comment.images.length > 0 && (
+                      <ImageWrapper
+                        className="max-sm:-ml-10"
+                        images={comment.images}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             ))
