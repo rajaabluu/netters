@@ -245,7 +245,7 @@ route.get("/:id", checkAuth, async (req, res) => {
 });
 
 // Create Post
-route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
+route.post("/", checkAuth, upload.array("images[]", 4), async (req, res) => {
   const { text } = req.body;
   let images = [];
   try {
@@ -261,7 +261,7 @@ route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
     const post = await new Post({
       user: req.user._id.toString(),
       text: text,
-      images: images.length > 0 ? images : null,
+      images: images,
     });
 
     post.save();
@@ -277,7 +277,7 @@ route.post("/", checkAuth, upload.array("images", 4), async (req, res) => {
 route.post(
   "/:id/comment",
   checkAuth,
-  upload.array("images", 4),
+  upload.array("images[]", 4),
   async (req, res) => {
     try {
       connectMongoDB();
@@ -287,7 +287,7 @@ route.post(
       }
       if (!!req.files) {
         for (let image of req.files) {
-          const result = await cloudinary.uploader.upload(image, {
+          const result = await cloudinary.uploader.upload(image.path, {
             folder: "comments",
           });
           images.push({ url: result.secure_url, publicId: result.public_id });

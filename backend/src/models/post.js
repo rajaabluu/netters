@@ -1,5 +1,30 @@
 const mongoose = require("mongoose");
 
+const Comment = new mongoose.Schema(
+  {
+    images: {
+      type: [
+        {
+          url: String,
+          publicId: String,
+        },
+      ],
+      default: null,
+    },
+    text: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    user: {
+      type: mongoose.SchemaTypes.ObjectId,
+      required: true,
+      ref: "user",
+    },
+  },
+  { timestamps: true }
+);
+
 const schema = new mongoose.Schema(
   {
     user: {
@@ -10,33 +35,7 @@ const schema = new mongoose.Schema(
     text: String,
     images: [{ publicId: String, url: String }],
     likes: [{ type: mongoose.SchemaTypes.ObjectId, ref: "user" }],
-    comments: [
-      {
-        images: {
-          type: [
-            {
-              url: String,
-              publicId: String,
-            },
-          ],
-          default: null,
-        },
-        text: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        user: {
-          type: mongoose.SchemaTypes.ObjectId,
-          required: true,
-          ref: "user",
-        },
-        createdAt: {
-          type: mongoose.SchemaTypes.Date,
-          default: Date.now(),
-        },
-      },
-    ],
+    comments: [Comment],
   },
   { timestamps: true }
 );
