@@ -23,6 +23,7 @@ import useModal from "../../hooks/useModal";
 import ReactTextareaAutosize from "react-textarea-autosize";
 import { User as UserType } from "../../types/user.type";
 import { User, userIsFollowing } from "../../components/user/user";
+import Modal from "../../components/modal/modal";
 
 const forms = [
   { name: "username", label: "Username" },
@@ -131,205 +132,193 @@ export default function ProfilePage() {
   return (
     <>
       {/* Edit Modal */}
-      {editModalShow && (
-        <>
-          <div
-            onClick={toggleEditModal}
-            className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
-          ></div>
-          <div className="fixed z-[9999] sm:mx-auto sm:my-auto sm:h-fit top-0 left-0 bottom-0 sm:min-w-[20rem] right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
-            <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky backdrop-blur top-0 bg-[rgba(255,255,255,0.8)]">
-              <ArrowLeftIcon
-                onClick={toggleEditModal}
-                className="size-6 sm:hidden cursor-pointer"
-              />
-              <XMarkIcon
-                onClick={toggleEditModal}
-                className="size-6 max-sm:hidden cursor-pointer"
-              />
-              <h1 className="font-semibold text-lg">Edit Profile</h1>
-              {updating ? (
-                <Loader className="size-7 invert ms-auto"></Loader>
-              ) : (
-                <button
-                  onClick={() => {
-                    update(credentials as any, {
-                      onSuccess: async () => {
-                        toggleEditModal();
-                        await Promise.all([
-                          auth.username == username &&
-                            queryClient.invalidateQueries({
-                              queryKey: ["auth"],
-                            }),
+
+      <Modal show={editModalShow} toggle={toggleEditModal}>
+        <div className="sm:h-fit top-0 left-0 bottom-0 sm:min-w-[20rem] right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] overflow-y-scroll">
+          <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky backdrop-blur top-0 bg-[rgba(255,255,255,0.8)]">
+            <ArrowLeftIcon
+              onClick={toggleEditModal}
+              className="size-6 sm:hidden cursor-pointer"
+            />
+            <XMarkIcon
+              onClick={toggleEditModal}
+              className="size-6 max-sm:hidden cursor-pointer"
+            />
+            <h1 className="font-semibold text-lg">Edit Profile</h1>
+            {updating ? (
+              <Loader className="size-7 invert ms-auto"></Loader>
+            ) : (
+              <button
+                onClick={() => {
+                  update(credentials as any, {
+                    onSuccess: async () => {
+                      toggleEditModal();
+                      await Promise.all([
+                        auth.username == username &&
                           queryClient.invalidateQueries({
-                            queryKey: ["posts", username],
+                            queryKey: ["auth"],
                           }),
-                          queryClient.invalidateQueries({
-                            queryKey: ["profile", username],
-                          }),
-                        ]);
-                      },
-                    });
-                  }}
-                  className="bg-black px-4 rounded-full ms-auto py-1.5 text-sm text-white"
-                >
-                  Save
-                </button>
-              )}
-            </div>
-            <div
-              style={{
-                backgroundImage: !!credentials.coverImage
-                  ? `url(${getCoverImage()})`
-                  : " ",
-              }}
-              className="min-h-36 h-36 bg-cover bg-center flex justify-center items-center bg-gray-100 overflow-hidden"
-            >
-              <label
-                htmlFor="coverImage"
-                className={clsx(
-                  "text-sm",
-                  !!credentials.coverImage ? "text-white" : "text-slate-500 "
-                )}
+                        queryClient.invalidateQueries({
+                          queryKey: ["posts", username],
+                        }),
+                        queryClient.invalidateQueries({
+                          queryKey: ["profile", username],
+                        }),
+                      ]);
+                    },
+                  });
+                }}
+                className="bg-black px-4 rounded-full ms-auto py-1.5 text-sm text-white"
               >
-                Add Cover
-              </label>
-              <input
-                type="file"
-                id="coverImage"
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  setCredentials((c: any) => ({
-                    ...c,
-                    coverImage: !!e.target.files && (e.target.files[0] as any),
-                  }));
-                }}
-                hidden
-              />
-            </div>
-            <div
-              style={{
-                backgroundImage: !!credentials.profileImage
-                  ? `url(${getProfileImage()})`
-                  : "",
-              }}
-              className="size-[4.6rem] bg-cover bg-center rounded-full bg-gray-200 ml-4 -mt-[2.5rem] flex items-center justify-center"
-            >
-              <label htmlFor="profileImage">
-                <CameraIcon
-                  className={clsx(
-                    "size-6 ",
-                    !!credentials.profileImage ? "fill-white" : "fill-gray-400"
-                  )}
-                />
-              </label>
-              <input
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  setCredentials((c: any) => ({
-                    ...c,
-                    profileImage:
-                      !!e.target.files && (e.target.files[0] as any),
-                  }));
-                }}
-                type="file"
-                hidden
-                name=""
-                id="profileImage"
-              />
-            </div>
-            <div className="flex flex-wrap items-stretch w-full sm:w-fit px-5 gap-4 mt-8 sm:py-6">
-              {forms.map((form, i) => {
-                return (
-                  <div
-                    key={i}
-                    className="flex flex-col w-full !h-auto flex-grow  "
-                  >
-                    <label
-                      htmlFor={form.name}
-                      className=" text-slate-600 text-sm sm:mb-1"
-                    >
-                      {form.label}
-                    </label>
-                    {form.name == "bio" ? (
-                      <ReactTextareaAutosize
-                        onChange={handleChange}
-                        id={form.name}
-                        value={
-                          credentials[
-                            form.name as keyof typeof credentials
-                          ] as any
-                        }
-                        className="resize-none sm:border sm:px-3 sm:py-2 sm:rounded-md  flex-grow min-h-24 focus:outline-none border-b-2 py-0.5 border-slate-300"
-                      ></ReactTextareaAutosize>
-                    ) : (
-                      <input
-                        onChange={handleChange}
-                        id={form.name}
-                        value={
-                          credentials[
-                            form.name as keyof typeof credentials
-                          ] as any
-                        }
-                        className="border-b-2 sm:border sm:px-3 sm:rounded-md  sm:py-2 py-1 flex-grow border-slate-300"
-                        type="text"
-                      ></input>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                Save
+              </button>
+            )}
           </div>
-        </>
-      )}
+          <div
+            style={{
+              backgroundImage: !!credentials.coverImage
+                ? `url(${getCoverImage()})`
+                : " ",
+            }}
+            className="min-h-36 h-36 bg-cover bg-center flex justify-center items-center bg-gray-100 overflow-hidden"
+          >
+            <label
+              htmlFor="coverImage"
+              className={clsx(
+                "text-sm",
+                !!credentials.coverImage ? "text-white" : "text-slate-500 "
+              )}
+            >
+              Add Cover
+            </label>
+            <input
+              type="file"
+              id="coverImage"
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setCredentials((c: any) => ({
+                  ...c,
+                  coverImage: !!e.target.files && (e.target.files[0] as any),
+                }));
+              }}
+              hidden
+            />
+          </div>
+          <div
+            style={{
+              backgroundImage: !!credentials.profileImage
+                ? `url(${getProfileImage()})`
+                : "",
+            }}
+            className="size-[4.6rem] bg-cover bg-center rounded-full bg-gray-200 ml-4 -mt-[2.5rem] flex items-center justify-center"
+          >
+            <label htmlFor="profileImage">
+              <CameraIcon
+                className={clsx(
+                  "size-6 ",
+                  !!credentials.profileImage ? "fill-white" : "fill-gray-400"
+                )}
+              />
+            </label>
+            <input
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setCredentials((c: any) => ({
+                  ...c,
+                  profileImage: !!e.target.files && (e.target.files[0] as any),
+                }));
+              }}
+              type="file"
+              hidden
+              name=""
+              id="profileImage"
+            />
+          </div>
+          <div className="flex flex-wrap items-stretch w-full sm:w-fit px-5 gap-4 mt-8 sm:py-6">
+            {forms.map((form, i) => {
+              return (
+                <div
+                  key={i}
+                  className="flex flex-col w-full !h-auto flex-grow  "
+                >
+                  <label
+                    htmlFor={form.name}
+                    className=" text-slate-600 text-sm sm:mb-1"
+                  >
+                    {form.label}
+                  </label>
+                  {form.name == "bio" ? (
+                    <ReactTextareaAutosize
+                      onChange={handleChange}
+                      id={form.name}
+                      value={
+                        credentials[
+                          form.name as keyof typeof credentials
+                        ] as any
+                      }
+                      className="resize-none sm:border sm:px-3 sm:py-2 sm:rounded-md  flex-grow min-h-24 focus:outline-none border-b-2 py-0.5 border-slate-300"
+                    ></ReactTextareaAutosize>
+                  ) : (
+                    <input
+                      onChange={handleChange}
+                      id={form.name}
+                      value={
+                        credentials[
+                          form.name as keyof typeof credentials
+                        ] as any
+                      }
+                      className="border-b-2 sm:border sm:px-3 sm:rounded-md  sm:py-2 py-1 flex-grow border-slate-300"
+                      type="text"
+                    ></input>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Modal>
+
       {/* End edit Modal */}
       {/*  Followers Modal */}
-      {followersModalShow && (
-        <>
-          <div
-            onClick={toggleFollowersModal}
-            className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
-          ></div>
-          <div className="fixed z-[9999] sm:mx-auto sm:my-auto top-0 left-0 bottom-0 sm:min-w-[28rem] md:w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
-            <div className=" px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
-              <ArrowLeftIcon
-                onClick={toggleFollowersModal}
-                className="size-6 sm:hidden cursor-pointer"
-              />
-              <XMarkIcon
-                onClick={toggleFollowersModal}
-                className="size-6 max-sm:hidden cursor-pointer"
-              />
-              <h1 className="font-semibold text-lg">Followers</h1>
-            </div>
-            <div className="flex flex-col">
-              {profile?.followers && profile.followers.length > 0 ? (
-                profile?.followers.map((user, i) => {
-                  return (
-                    <User
-                      className="!px-4 border-b border-b-slate-300"
-                      user={user}
-                      key={i}
-                    />
-                  );
-                })
-              ) : (
-                <div className="flex justify-center text-sm text-slate-500 mt-12">
-                  No Followers
-                </div>
-              )}
-            </div>
+
+      <Modal show={followersModalShow} toggle={toggleFollowersModal}>
+        <div className="sm:min-w-[28rem] md:w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
+          <div className=" px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
+            <ArrowLeftIcon
+              onClick={toggleFollowersModal}
+              className="size-6 sm:hidden cursor-pointer"
+            />
+            <XMarkIcon
+              onClick={toggleFollowersModal}
+              className="size-6 max-sm:hidden cursor-pointer"
+            />
+            <h1 className="font-semibold text-lg">Followers</h1>
           </div>
-        </>
-      )}
+          <div className="flex flex-col">
+            {profile?.followers && profile.followers.length > 0 ? (
+              profile?.followers.map((user, i) => {
+                return (
+                  <User
+                    className="!px-4 border-b border-b-slate-300"
+                    user={user}
+                    key={i}
+                  />
+                );
+              })
+            ) : (
+              <div className="flex justify-center text-sm text-slate-500 mt-12">
+                No Followers
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+
       {/* End Followers Modal */}
 
       {/* Following Modal */}
-      {followingModalShow && (
+
+      <Modal show={followingModalShow} toggle={toggleFollowingModal}>
         <>
-          <div
-            onClick={toggleFollowingModal}
-            className="fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.2)] z-[9998]"
-          ></div>
-          <div className="fixed z-[9999] sm:mx-auto sm:my-auto top-0 left-0 bottom-0 sm:min-w-[28rem] md:min-w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
+          <div className=" sm:min-w-[28rem] md:min-w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
             <div className="px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
               <ArrowLeftIcon
                 onClick={toggleFollowingModal}
@@ -360,7 +349,8 @@ export default function ProfilePage() {
             </div>
           </div>
         </>
-      )}
+      </Modal>
+
       {/* End Following Modal */}
 
       <div className="bg-white flex flex-col">
