@@ -40,7 +40,7 @@ export default function LoginPage() {
   });
 
   return (
-    <div className="py-8 px-8 md:p-0 min-h-screen flex flex-col sm:px-16 md:flex-row">
+    <div className="py-8 px-8 md:p-0 min-h-dvh flex flex-col sm:px-16 md:flex-row">
       <div className="flex flex-col h-full flex-grow md:flex-grow-0 text-center items-center md:w-4/6 lg:w-1/2 md:px-16">
         <h1 className="font-semibold text-slate-800 text-3xl mt-32 md:mt-40">
           Sign In{" "}

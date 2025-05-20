@@ -8,7 +8,7 @@ const { connectMongoDB } = require("../config/mongo");
 const cloudinary = require("cloudinary").v2;
 
 // Get All / Followed Users Post
-route.get("/", checkAuth, async (req, res) => {
+route.get("/", async (req, res) => {
   const itemsPerPage = 10;
   const page = Math.max(0, req.query.page || 1);
   const totalPosts = await Post.countDocuments({});
@@ -74,7 +74,7 @@ route.get("/", checkAuth, async (req, res) => {
       data: posts,
       pagination: {
         itemsPerPage,
-        nextPage: itemsPerPage * page >= totalPosts ? page + 1 : null,
+        nextPage: itemsPerPage * page < totalPosts ? page + 1 : null,
         prevPage: page > 1 ? page - 1 : null,
       },
     });
@@ -145,7 +145,7 @@ route.get("/:id/user", checkAuth, async (req, res) => {
       data: posts,
       pagination: {
         itemsPerPage,
-        nextPage: itemsPerPage * page >= totalPosts ? page + 1 : null,
+        nextPage: itemsPerPage * page < totalPosts ? page + 1 : null,
         prevPage: page > 1 ? page - 1 : null,
       },
     });
@@ -221,7 +221,7 @@ route.get("/:id/user/likes", checkAuth, async (req, res) => {
       data: posts,
       pagination: {
         itemsPerPage,
-        nextPage: itemsPerPage * page >= totalPosts ? page + 1 : null,
+        nextPage: itemsPerPage * page < totalPosts ? page + 1 : null,
         prevPage: page > 1 ? page - 1 : null,
       },
     });

@@ -23,7 +23,7 @@ export const getPostUrl = (post: PostType) =>
   `/${post.user.username}/post/${post._id}`;
 
 export default function Post({ post, user }: { post: PostType; user: any }) {
-  const { show, toggle, close } = useModal();
+  const { show, toggle: toggleMenu, close } = useModal();
   const l = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -47,7 +47,7 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
           queryKey: ["posts"],
         }));
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
-
+      toggleMenu();
       toast.info("Post deleted");
     },
   });
@@ -138,7 +138,7 @@ export default function Post({ post, user }: { post: PostType; user: any }) {
           className="relative"
           onClick={(e) => {
             e.stopPropagation();
-            toggle();
+            toggleMenu();
           }}
         >
           <EllipsisHorizontalIcon className="size-5 text-slate-600" />

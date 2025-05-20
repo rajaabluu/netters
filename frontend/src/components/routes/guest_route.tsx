@@ -6,7 +6,7 @@ export default function GuestRoute() {
   const { auth, isLoading } = useAuth();
   if (isLoading)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-dvh flex items-center justify-center">
         <Loader className="size-8" />
       </div>
     );

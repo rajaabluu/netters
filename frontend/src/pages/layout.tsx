@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { Link, matchPath, Outlet, useLocation } from "react-router-dom";
 import api from "../api/config";
 import { toast } from "sonner";
@@ -27,6 +27,8 @@ export default function Layout() {
   const location = useLocation();
   const { show, toggle } = useModal();
   const queryClient = useQueryClient();
+  const profileRef = useRef<HTMLDivElement | null>(null);
+  const toggleButtonRef = useRef<HTMLDivElement | null>(null);
 
   // const { data: suggestedUsers, isLoading: loadingSuggestedUsers } = useQuery({
   //   queryKey: ["suggested-users"],
@@ -54,6 +56,18 @@ export default function Layout() {
       toast.success("Logout Success");
     },
   });
+
+  useEffect(() => {
+    window.addEventListener("click", (e) => {
+      if (
+        !profileRef.current?.contains(e.target as Node) &&
+        !toggleButtonRef.current?.contains(e.target as Node) &&
+        show == true
+      ) {
+        toggle();
+      }
+    });
+  }, [show]);
 
   const pages = ["/notification"];
   const hiddenLayoutPages = ["/:username", "/:username/post/:id"];
@@ -116,11 +130,11 @@ export default function Layout() {
   if (isLoading) return null;
 
   return (
-    <div className="h-screen w-screen sm:flex">
+    <div className="h-dvh w-screen sm:flex">
       <div
         id="bar"
         className={clsx(
-          "fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:fixed sm:border-r sm:border-r-slate-300 sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-4 xl:pr-20 xl:pl-12",
+          "fixed z-[999] max-sm:border-t max-sm:border-t-slate-200 bg-white bottom-0 max-md:left-0 max-md:right-0 px-2 py-3.5 sm:py-8 border-l border-neutral-300 flex gap-4 sm:fixed sm:border-r sm:border-r-slate-300 sm:flex-col max-xl:items-center sm:w-fit sm:h-full sm:px-4 xl:pr-20 xl:pl-12",
           match && "max-sm:hidden"
         )}
       >
@@ -162,6 +176,7 @@ export default function Layout() {
             netters.
           </h1>
           <div
+            ref={toggleButtonRef}
             className="flex gap-3 items-center xl:w-52 cursor-pointer xl:border border-slate-300 xl:px-3 xl:py-2 xl:pr-6 xl:rounded-full"
             onClick={() => toggle()}
           >
@@ -177,24 +192,29 @@ export default function Layout() {
               <p className="text-sm -mt-0.5 text-slate-600">@{auth.username}</p>
             </div>
           </div>
-          {show && (
-            <div className="w-max border border-neutral-300 rounded-md shadow-md bg-white absolute max-sm:top-[4.2rem] max-sm:right-6 sm:left-20 sm:bottom-0 xl:bottom-16 xl:left-1 flex flex-col">
-              <div className="px-4 pt-2 pb-3 min-w-[12rem]">
-                <h1 className="text-neutral-800 font-medium ">{auth.name}</h1>
-                <p className="text-sm text-neutral-600">@{auth.username}</p>
-              </div>
-              <div className="flex flex-col text-sm *:px-4 cursor-pointer hover:bg-slate-200">
-                <span
-                  onClick={() => logout()}
-                  className="py-3 border-t border-slate-200  flex items-center gap-2 "
-                >
-                  <p className="text-sm">
-                    Logout from <span>@{auth.username}</span>{" "}
-                  </p>
-                </span>
-              </div>
+
+          <div
+            ref={profileRef}
+            className={clsx(
+              "duration-300 ease-in-out origin-top-right sm:origin-bottom-left xl:origin-bottom w-max border border-neutral-300 rounded-md shadow-md bg-white absolute max-sm:top-[4.2rem] max-sm:right-6 sm:left-20 sm:bottom-0 xl:bottom-16 xl:left-1 flex flex-col",
+              show ? "" : "pointer-events-none scale-0  "
+            )}
+          >
+            <div className="px-4 pt-2 pb-3 min-w-[12rem]">
+              <h1 className="text-neutral-800 font-medium ">{auth.name}</h1>
+              <p className="text-sm text-neutral-600">@{auth.username}</p>
             </div>
-          )}
+            <div className="flex flex-col text-sm *:px-4 cursor-pointer hover:bg-slate-200">
+              <span
+                onClick={() => logout()}
+                className="py-3 border-t border-slate-200  flex items-center gap-2 "
+              >
+                <p className="text-sm">
+                  Logout from <span>@{auth.username}</span>{" "}
+                </p>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       <div
@@ -203,11 +223,11 @@ export default function Layout() {
           !match && !topbarHidden && "max-sm:pt-[4.5rem]"
         )}
       >
-        <div className="min-h-screen sm:w-full max-w-[600px] flex-grow border-r border-r-slate-300">
+        <div className="min-h-dvh w-full max-w-[700px] flex-grow border-r border-r-slate-300">
           <Outlet />
         </div>
         {/* Suggested Users */}
-        {/* <div className="max-lg:hidden py-4 px-4 flex-grow sticky top-0 h-fit max-h-screen max-w-[25rem]">
+        {/* <div className="max-lg:hidden py-4 px-4 flex-grow sticky top-0 h-fit max-h-dvh max-w-[25rem]">
           <div className="flex h-fit flex-col border border-slate-300 rounded-lg px-2 py-2 pb-4">
             <div>
               <h1 className="text-xl mx-3 font-bold py-2 text-slate-800">

@@ -124,7 +124,7 @@ export default function ProfilePage() {
 
   if (isLoading)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-dvh flex items-center justify-center">
         <Loader className="size-10 invert" />
       </div>
     );
@@ -134,7 +134,7 @@ export default function ProfilePage() {
       {/* Edit Modal */}
 
       <Modal show={editModalShow} toggle={toggleEditModal}>
-        <div className="sm:h-fit top-0 left-0 bottom-0 sm:min-w-[20rem] right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] overflow-y-scroll">
+        <div className="max-sm:min-w-[100vw] sm:h-fit top-0 left-0 bottom-0 sm:min-w-[20rem] right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-dvh sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] overflow-y-scroll">
           <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky backdrop-blur top-0 bg-[rgba(255,255,255,0.8)]">
             <ArrowLeftIcon
               onClick={toggleEditModal}
@@ -280,7 +280,7 @@ export default function ProfilePage() {
       {/*  Followers Modal */}
 
       <Modal show={followersModalShow} toggle={toggleFollowersModal}>
-        <div className="sm:min-w-[28rem] md:w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
+        <div className="min-w-[100vw] sm:min-w-[28rem] md:w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-dvh sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
           <div className=" px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
             <ArrowLeftIcon
               onClick={toggleFollowersModal}
@@ -318,7 +318,7 @@ export default function ProfilePage() {
 
       <Modal show={followingModalShow} toggle={toggleFollowingModal}>
         <>
-          <div className=" sm:min-w-[28rem] md:min-w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-screen sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
+          <div className="min-w-[100vw] sm:min-w-[28rem] md:min-w-[30rem] sm:h-[30rem] sm:overflow-y-scroll right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-dvh sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] sm:overflow-scroll">
             <div className="px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky top-0 bg-[rgba(255,255,255,1)]">
               <ArrowLeftIcon
                 onClick={toggleFollowingModal}

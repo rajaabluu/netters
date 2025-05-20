@@ -95,16 +95,16 @@ export default function HomePage() {
         </span>
       </div>
 
-      {/* NEW POST MODAL */}
-
       {/* POST MODAL BUTTON */}
       <div
         onClick={() => toggle()}
-        className="fixed z-[9999] right-6 bottom-24 border border-slate-500 sm:hidden bg-black text-white fill-white p-1 rounded-full"
+        className="fixed z-[9999] right-6 bottom-20 border border-slate-500 sm:hidden bg-black text-white fill-white p-1 rounded-full"
       >
-        <PlusIcon className="size-9 cursor-pointer" />
+        <PlusIcon className="size-[2.10rem] cursor-pointer" />
       </div>
       {/*END POST MODAL BUTTON */}
+
+      {/* NEW POST MODAL */}
 
       <div
         className={clsx(
@@ -130,7 +130,7 @@ export default function HomePage() {
             src={
               !!auth.profileImage ? auth.profileImage.url : "/img/default.png"
             }
-            className="size-9 sm:size-10 object-cover rounded-full"
+            className="min-h-9 max-h-9 min-w-9 max-w-9 sm:min-w-10 sm:max-w-10 sm:max-h-10 sm:min-h-10 object-cover rounded-full"
             alt=""
           />
           <ReactTextareaAutosize
@@ -181,7 +181,7 @@ export default function HomePage() {
             })}
           </Swiper>
         )}
-        <div className="flex gap-2 border-y  text-slate-800 font-medium text-sm items-center border-t-slate-200 mt-auto py-3  px-4">
+        <div className="flex gap-2 border-y  text-slate-800 font-medium text-sm items-center border-t-slate-200 max-sm:fixed max-sm:bottom-0 max-sm:w-full py-3  px-4">
           <label htmlFor="file" className="flex gap-2 items-center">
             <PhotoIcon className="size-6" />
             <h1 className="">Add Image</h1>

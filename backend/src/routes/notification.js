@@ -37,7 +37,7 @@ route.get("/", checkAuth, async (req, res) => {
       pagination: {
         itemsPerPage,
         nextPage:
-          itemsPerPage * page >= notificationsTotal && notificationsTotal !== 0
+          itemsPerPage * page < notificationsTotal && notificationsTotal !== 0
             ? parseInt(page) + 1
             : null,
         prevPage: page > 1 ? page - 1 : null,

@@ -48,11 +48,11 @@ const LikeNotification = ({
           </span>
         </h1>
       </div>
-      {!!notification.post.images && (
+      {!!notification.post.images && notification.post.images.length > 0 && (
         <div className="size-10 sm:size-11 min-w-10 min-h-10   overflow-hidden rounded-md ms-auto">
           <img
             className="size-full object-cover object-center"
-            src={notification.post.images[0].url}
+            src={notification?.post?.images[0]?.url}
             alt=""
           />
         </div>
@@ -104,11 +104,11 @@ const CommentNotification = ({
           </span>
         </h1>
       </div>
-      {!!notification.post.images && (
+      {!!notification.post.images && notification.post.images.length > 0 && (
         <div className="size-10 sm:size-11 min-w-10 min-h-10   overflow-hidden rounded-md ms-auto">
           <img
             className="size-full object-cover object-center"
-            src={notification.post.images[0].url}
+            src={notification?.post.images[0].url}
             alt=""
           />
         </div>

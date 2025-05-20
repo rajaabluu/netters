@@ -70,13 +70,13 @@ export default function PostDetailPage() {
   }, [comment.images]);
   if (isLoading || !post)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-dvh flex items-center justify-center">
         <Loader className="size-10 invert" />
       </div>
     );
 
   return (
-    <div className="h-screen overflow-y-scroll">
+    <div className="h-dvh overflow-y-scroll">
       <div className="flex py-4 sticky top-0 px-4 sm:px-6 items-center bg-white gap-4 border-b border-slate-300">
         <ArrowLeftIcon onClick={() => navigate(-1)} className="size-6" />
         <h1 className="font-bold text-lg">Post</h1>

@@ -51,9 +51,9 @@ export default function SignUpPage() {
     },
   });
   return (
-    <div className="flex h-screen">
+    <div className="flex h-dvh">
       <div className="flex max-md:hidden md:flex-grow bg-[#18181B]"></div>
-      <div className="flex flex-col justify-center h-screen max-md:flex-grow md:w-2/3 px-[8%] sm:text-center sm:px-28 md:px-16 lg:px-12 xl:px-20 2xl:px-28 lg:w-1/2">
+      <div className="flex flex-col justify-center h-dvh max-md:flex-grow md:w-2/3 px-[8%] sm:text-center sm:px-28 md:px-16 lg:px-12 xl:px-20 2xl:px-28 lg:w-1/2">
         <div className="-mt-8">
           <h1 className="font-semibold text-3xl text-slate-700">Sign Up</h1>
           <p className="text-slate-500">Create your account below.</p>
