@@ -301,13 +301,15 @@ route.post(
         images: images,
       });
       await post.save();
-      await new Notification({
-        type: "comment",
-        post: post._id,
-        from: req.user._id,
-        to: post.user,
-        text: req.body.text,
-      }).save();
+      if (post.user !== req.user._id) {
+        await new Notification({
+          type: "comment",
+          post: post._id,
+          from: req.user._id,
+          to: post.user,
+          text: req.body.text,
+        }).save();
+      }
       return res.status(200).json({ message: "Success Comment on Post" });
     } catch (err) {
       return res.status(500).json({ message: err.message });

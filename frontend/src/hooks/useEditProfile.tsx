@@ -21,6 +21,7 @@ export default function useEditProfile() {
       if (username !== data.username) navigate("/" + data.username);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["auth"] }),
+        queryClient.invalidateQueries({ queryKey: ["profile"] }),
         queryClient.invalidateQueries({ queryKey: ["posts", data.username] }),
       ]);
     },

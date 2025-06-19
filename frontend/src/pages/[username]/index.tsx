@@ -24,6 +24,7 @@ import ReactTextareaAutosize from "react-textarea-autosize";
 import { User as UserType } from "../../types/user.type";
 import { User, userIsFollowing } from "../../components/user/user";
 import Modal from "../../components/modal/modal";
+import useDebouncedVal from "../../hooks/useDebounce";
 
 const forms = [
   { name: "username", label: "Username" },
@@ -36,7 +37,6 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [inView, setInView] = useState(false);
-  const [credentials, setCredentials] = useState<any>({});
   const [type, setType] = useState<"post" | "likes">("post");
   const { toggle: toggleEditModal, show: editModalShow } = useModal();
   const { toggle: toggleFollowersModal, show: followersModalShow } = useModal();
@@ -53,6 +53,25 @@ export default function ProfilePage() {
       if (res.status == 200) return res.data;
     },
   });
+
+  const [credentials, setCredentials] = useState<any>(profile || {});
+
+  const debouncedUsername = useDebouncedVal(credentials?.username || "", 1000);
+
+  const [usernameHasUsed, setUsernameHasUsed] = useState(false);
+
+  useEffect(() => {
+    if (debouncedUsername == "") return setUsernameHasUsed(false);
+    if (auth.username == debouncedUsername) return setUsernameHasUsed(false);
+    (async () => {
+      try {
+        const res = await api.get(`/user/${debouncedUsername}/profile`);
+        if (res.status == 200) return setUsernameHasUsed(true);
+      } catch (err) {
+        return setUsernameHasUsed(false);
+      }
+    })();
+  }, [debouncedUsername]);
 
   const { data: posts } = useInfiniteQuery({
     initialPageParam: 1,
@@ -98,15 +117,8 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    if (!!profile) {
-      setCredentials({
-        bio: profile.bio || "",
-        coverImage: (profile.coverImage as any) || null,
-        profileImage: (profile.profileImage as any) || null,
-        name: profile.name || "",
-        username: profile.username || "",
-        link: profile.link || "",
-      });
+    if (!!profile && profile._id == auth._id) {
+      setCredentials(profile);
     }
   }, [profile]);
 
@@ -137,11 +149,33 @@ export default function ProfilePage() {
         <div className="max-sm:min-w-[100vw] sm:h-fit top-0 left-0 bottom-0 sm:min-w-[20rem] right-0 bg-white border border-slate-200 sm:rounded-[1rem] max-sm:min-h-dvh sm:w-max sm:max-w-[32rem] sm:max-h-[40rem] overflow-y-scroll">
           <div className="px-6 sm:px-4 py-4 border-b flex gap-4 items-center border-b-slate-300 sticky backdrop-blur top-0 bg-[rgba(255,255,255,0.8)]">
             <ArrowLeftIcon
-              onClick={toggleEditModal}
+              onClick={() => {
+                toggleEditModal();
+                if (profile)
+                  setCredentials({
+                    bio: profile.bio || "",
+                    coverImage: (profile.coverImage as any) || null,
+                    profileImage: (profile.profileImage as any) || null,
+                    name: profile.name || "",
+                    username: profile.username || "",
+                    link: profile.link || "",
+                  });
+              }}
               className="size-6 sm:hidden cursor-pointer"
             />
             <XMarkIcon
-              onClick={toggleEditModal}
+              onClick={() => {
+                toggleEditModal();
+                if (profile)
+                  setCredentials({
+                    bio: profile.bio || "",
+                    coverImage: (profile.coverImage as any) || null,
+                    profileImage: (profile.profileImage as any) || null,
+                    name: profile.name || "",
+                    username: profile.username || "",
+                    link: profile.link || "",
+                  });
+              }}
               className="size-6 max-sm:hidden cursor-pointer"
             />
             <h1 className="font-semibold text-lg">Edit Profile</h1>
@@ -149,7 +183,8 @@ export default function ProfilePage() {
               <Loader className="size-7 invert ms-auto"></Loader>
             ) : (
               <button
-                onClick={() => {
+                disabled={usernameHasUsed}
+                onClick={async () => {
                   update(credentials as any, {
                     onSuccess: async () => {
                       toggleEditModal();
@@ -250,9 +285,9 @@ export default function ProfilePage() {
                       onChange={handleChange}
                       id={form.name}
                       value={
-                        credentials[
+                        (credentials[
                           form.name as keyof typeof credentials
-                        ] as any
+                        ] as any) || ""
                       }
                       className="resize-none sm:border sm:px-3 sm:py-2 sm:rounded-md  flex-grow min-h-24 focus:outline-none border-b-2 py-0.5 border-slate-300"
                     ></ReactTextareaAutosize>
@@ -261,14 +296,21 @@ export default function ProfilePage() {
                       onChange={handleChange}
                       id={form.name}
                       value={
-                        credentials[
+                        (credentials[
                           form.name as keyof typeof credentials
-                        ] as any
+                        ] as any) || ""
                       }
                       className="border-b-2 sm:border sm:px-3 sm:rounded-md  sm:py-2 py-1 flex-grow border-slate-300"
                       type="text"
                     ></input>
                   )}
+                  {form.name == "username" &&
+                    credentials.username == debouncedUsername &&
+                    usernameHasUsed && (
+                      <small className="text-red-400">
+                        username has already used
+                      </small>
+                    )}
                 </div>
               );
             })}

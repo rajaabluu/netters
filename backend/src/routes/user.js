@@ -154,7 +154,7 @@ route.put(
       user.email = email || user.email;
       user.username = username || user.username;
       user.password = newPassword || user.password;
-      user.bio = bio || user.bio;
+      user.bio = bio;
       user.link = link || user.link;
       user.profileImage = profileImage || user.profileImage;
       user.coverImage = coverImage || user.coverImage;

@@ -46,6 +46,7 @@ export default function HomePage() {
     },
     getNextPageParam: (lastPage) => lastPage?.nextPage,
     staleTime: 1000 * 60,
+    refetchInterval: 1000 * 60 * 2,
   });
 
   const { mutate: createNewPost, isPending: pendingNewPost } = useMutation({
